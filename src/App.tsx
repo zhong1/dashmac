@@ -2,6 +2,12 @@ import { useState } from 'react'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import { useRealtimeData } from './hooks/useRealtimeData'
+import Overview from './components/dashboard/Overview'
+import MemoryOverview from './components/memory/MemoryOverview'
+import DiskOverview from './components/disk/DiskOverview'
+import NetworkOverview from './components/network/NetworkOverview'
+import Settings from './components/settings/Settings'
+import TrayPanel from './components/tray/TrayPanel'
 
 type Page = 'dashboard' | 'memory' | 'disk' | 'network' | 'settings'
 
@@ -14,6 +20,21 @@ const PAGE_TITLES: Record<Page, string> = {
 }
 
 export default function App() {
+  const isTray = window.location.hash === '#/tray'
+
+  if (isTray) {
+    return <TrayApp />
+  }
+
+  return <MainApp />
+}
+
+function TrayApp() {
+  useRealtimeData()
+  return <TrayPanel />
+}
+
+function MainApp() {
   const [page, setPage] = useState<Page>('dashboard')
   useRealtimeData()
 
@@ -33,22 +54,14 @@ export default function App() {
 function PageContent({ page }: { page: Page }) {
   switch (page) {
     case 'dashboard':
-      return <PlaceholderPage name="Dashboard" />
+      return <Overview />
     case 'memory':
-      return <PlaceholderPage name="Memory Analysis" />
+      return <MemoryOverview />
     case 'disk':
-      return <PlaceholderPage name="Disk Analysis" />
+      return <DiskOverview />
     case 'network':
-      return <PlaceholderPage name="Network Analysis" />
+      return <NetworkOverview />
     case 'settings':
-      return <PlaceholderPage name="Settings" />
+      return <Settings />
   }
-}
-
-function PlaceholderPage({ name }: { name: string }) {
-  return (
-    <div className="flex items-center justify-center h-full text-text-muted font-mono">
-      {name} — coming soon
-    </div>
-  )
 }
