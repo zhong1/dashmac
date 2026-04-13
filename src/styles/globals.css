@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-tertiary: #1c2128;
+
+  --color-border-primary: #30363d;
+  --color-border-secondary: #21262d;
+
+  --color-text-primary: #c9d1d9;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #484f58;
+
+  --color-status-green: #3fb950;
+  --color-status-yellow: #d29922;
+  --color-status-red: #f85149;
+  --color-status-blue: #1f6feb;
+
+  --font-mono: 'SF Mono', Menlo, Consolas, monospace;
+}
 
 body {
   margin: 0;
@@ -21,10 +39,6 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #30363d;
   border-radius: 3px;
-}
-
-.font-mono {
-  font-family: 'SF Mono', Menlo, Consolas, monospace;
 }
 
 .app-drag {
