@@ -22,6 +22,7 @@
     "electron-vite": "^5.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-is": "^19.2.5",
     "recharts": "^3.8.1",
     "systeminformation": "^5.31.5",
     "vite": "^6.4.2",
