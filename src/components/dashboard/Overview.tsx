@@ -1,4 +1,5 @@
 import { useSystemStore } from '../../stores/systemStore'
+import { useTranslation } from '../../i18n/index'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -26,6 +27,7 @@ function ProgressBar({ percent, color }: { percent: number; color: string }) {
 }
 
 export default function Overview() {
+  const { t } = useTranslation()
   const memory = useSystemStore((s) => s.memory)
   const diskVolumes = useSystemStore((s) => s.diskVolumes)
   const diskIO = useSystemStore((s) => s.diskIO)
@@ -44,37 +46,37 @@ export default function Overview() {
         {/* Memory Card */}
         <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-text-secondary uppercase tracking-wider">Memory</span>
+            <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.memory')}</span>
             <StatusDot level={memLevel} />
           </div>
           <div className="font-mono text-2xl font-semibold mb-1">{memory ? formatBytes(memory.used) : '--'}</div>
           <div className="text-xs text-text-muted font-mono mb-3">/ {memory ? formatBytes(memory.total) : '--'}</div>
           <ProgressBar percent={memPercent} color={memLevel === 'green' ? '#3fb950' : memLevel === 'yellow' ? '#d29922' : '#f85149'} />
           <div className="flex justify-between mt-2 text-xs text-text-muted font-mono">
-            <span>Cached: {memory ? formatBytes(memory.cached) : '--'}</span>
-            <span>Swap: {memory ? formatBytes(memory.swapUsed) : '--'}</span>
+            <span>{t('overview.cached')}: {memory ? formatBytes(memory.cached) : '--'}</span>
+            <span>{t('overview.swap')}: {memory ? formatBytes(memory.swapUsed) : '--'}</span>
           </div>
         </div>
 
         {/* Disk Card */}
         <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-text-secondary uppercase tracking-wider">Disk</span>
+            <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.disk')}</span>
             <StatusDot level={diskLevel} />
           </div>
           <div className="font-mono text-2xl font-semibold mb-1">{primaryDisk ? formatBytes(primaryDisk.used) : '--'}</div>
           <div className="text-xs text-text-muted font-mono mb-3">/ {primaryDisk ? formatBytes(primaryDisk.total) : '--'}</div>
           <ProgressBar percent={diskPercent} color={diskLevel === 'green' ? '#3fb950' : diskLevel === 'yellow' ? '#d29922' : '#f85149'} />
           <div className="flex justify-between mt-2 text-xs text-text-muted font-mono">
-            <span>R: {diskIO ? formatSpeed(diskIO.readSpeed) : '--'}</span>
-            <span>W: {diskIO ? formatSpeed(diskIO.writeSpeed) : '--'}</span>
+            <span>{t('overview.read')}: {diskIO ? formatSpeed(diskIO.readSpeed) : '--'}</span>
+            <span>{t('overview.write')}: {diskIO ? formatSpeed(diskIO.writeSpeed) : '--'}</span>
           </div>
         </div>
 
         {/* Network Card */}
         <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-text-secondary uppercase tracking-wider">Network</span>
+            <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.network')}</span>
             <StatusDot level="green" />
           </div>
           <div className="font-mono text-lg font-semibold mb-1">
