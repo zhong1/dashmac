@@ -38,7 +38,7 @@ const zhCN: typeof en = {
     realtime: '实时内存使用',
     history: '历史',
     pressureNormal: '正常',
-    pressureWarn: '中等',
+    pressureWarn: '警告',
     pressureCritical: '严重',
     processList: {
       loading: '加载进程中…',
@@ -56,10 +56,10 @@ const zhCN: typeof en = {
     io: '磁盘 I/O',
     spaceHistory: '空间历史',
     fileAnalysis: '文件大小分析',
-    scanPlaceholder: '/扫描路径',
+    scanPlaceholder: '/要扫描的路径',
     scan: '扫描',
     scanning: '扫描中…',
-    treemapEmpty: '暂无数据。点击 "扫描" 分析目录。',
+    treemapEmpty: '暂无数据。点击"扫描"分析目录。',
     bigFiles: {
       title: '最大的 50 个文件',
       number: '#',
