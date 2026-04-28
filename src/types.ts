@@ -92,6 +92,7 @@ export interface DashMacAPI {
   openMainWindow: () => void
   getSettings: () => Promise<AppSettings>
   saveSettings: (settings: AppSettings) => Promise<void>
+  onLangChanged: (callback: (lang: 'en' | 'zh-CN') => void) => () => void
 }
 
 export interface AppSettings {
@@ -100,6 +101,8 @@ export interface AppSettings {
   retentionDays: number
   trayDisplayMetric: 'memory' | 'cpu' | 'network' | 'none'
   launchAtLogin: boolean
+  language: 'auto' | 'en' | 'zh-CN'
+  resolvedLanguage: 'en' | 'zh-CN'
 }
 
 declare global {
