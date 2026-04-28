@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import type { AppSettings } from '../../types'
+import { useTranslation } from '../../i18n/index'
 
 const DEFAULTS: AppSettings = {
   realtimeInterval: 2000, historyInterval: 60000, retentionDays: 90,
   trayDisplayMetric: 'memory', launchAtLogin: false,
+  language: 'auto', resolvedLanguage: 'en',
 }
 
 export default function Settings() {
+  const { t } = useTranslation()
   const [settings, setSettings] = useState<AppSettings>(DEFAULTS)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -21,6 +24,12 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  const handleLanguageChange = async (next: AppSettings['language']) => {
+    const updated = { ...settings, language: next }
+    setSettings(updated)
+    await window.api.saveSettings(updated)
+  }
+
   const handleExport = async (format: 'csv' | 'json') => {
     const result = await window.api.exportData(format, 'all')
     if (result) window.api.revealFile(result)
@@ -28,51 +37,51 @@ export default function Settings() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <Section title="Data Collection">
-        <Field label="Real-time interval">
+      <Section title={t('settings.sections.dataCollection')}>
+        <Field label={t('settings.fields.realtimeInterval')}>
           <select value={settings.realtimeInterval} onChange={(e) => setSettings({ ...settings, realtimeInterval: Number(e.target.value) })}
             className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary">
-            <option value={1000}>1 second</option>
-            <option value={2000}>2 seconds</option>
-            <option value={5000}>5 seconds</option>
+            <option value={1000}>{t('settings.options.sec1')}</option>
+            <option value={2000}>{t('settings.options.sec2')}</option>
+            <option value={5000}>{t('settings.options.sec5')}</option>
           </select>
         </Field>
-        <Field label="History write interval">
+        <Field label={t('settings.fields.historyInterval')}>
           <select value={settings.historyInterval} onChange={(e) => setSettings({ ...settings, historyInterval: Number(e.target.value) })}
             className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary">
-            <option value={30000}>30 seconds</option>
-            <option value={60000}>60 seconds</option>
-            <option value={300000}>5 minutes</option>
+            <option value={30000}>{t('settings.options.sec30')}</option>
+            <option value={60000}>{t('settings.options.sec60')}</option>
+            <option value={300000}>{t('settings.options.min5')}</option>
           </select>
         </Field>
       </Section>
 
-      <Section title="Menu Bar">
-        <Field label="Display metric">
-          <select value={settings.trayDisplayMetric} onChange={(e) => setSettings({ ...settings, trayDisplayMetric: e.target.value as any })}
+      <Section title={t('settings.sections.menuBar')}>
+        <Field label={t('settings.fields.displayMetric')}>
+          <select value={settings.trayDisplayMetric} onChange={(e) => setSettings({ ...settings, trayDisplayMetric: e.target.value as AppSettings['trayDisplayMetric'] })}
             className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary">
-            <option value="memory">Memory %</option>
-            <option value="cpu">CPU %</option>
-            <option value="network">Network speed</option>
-            <option value="none">Icon only</option>
+            <option value="memory">{t('settings.options.memoryPct')}</option>
+            <option value="cpu">{t('settings.options.cpuPct')}</option>
+            <option value="network">{t('settings.options.networkSpeed')}</option>
+            <option value="none">{t('settings.options.iconOnly')}</option>
           </select>
         </Field>
       </Section>
 
-      <Section title="Storage">
-        <Field label="Keep history for">
+      <Section title={t('settings.sections.storage')}>
+        <Field label={t('settings.fields.retention')}>
           <select value={settings.retentionDays} onChange={(e) => setSettings({ ...settings, retentionDays: Number(e.target.value) })}
             className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary">
-            <option value={30}>30 days</option>
-            <option value={60}>60 days</option>
-            <option value={90}>90 days</option>
-            <option value={180}>180 days</option>
+            <option value={30}>{t('settings.options.day30')}</option>
+            <option value={60}>{t('settings.options.day60')}</option>
+            <option value={90}>{t('settings.options.day90')}</option>
+            <option value={180}>{t('settings.options.day180')}</option>
           </select>
         </Field>
       </Section>
 
-      <Section title="System">
-        <Field label="Launch at login">
+      <Section title={t('settings.sections.system')}>
+        <Field label={t('settings.fields.launchAtLogin')}>
           <button onClick={() => setSettings({ ...settings, launchAtLogin: !settings.launchAtLogin })}
             className={`w-10 h-5 rounded-full transition-colors ${settings.launchAtLogin ? 'bg-status-blue' : 'bg-border-primary'}`}>
             <div className={`w-4 h-4 bg-white rounded-full transition-transform ${settings.launchAtLogin ? 'translate-x-5' : 'translate-x-0.5'}`} />
@@ -80,21 +89,32 @@ export default function Settings() {
         </Field>
       </Section>
 
-      <Section title="Export Data">
+      <Section title={t('settings.sections.appearance')}>
+        <Field label={t('settings.fields.language')}>
+          <select value={settings.language} onChange={(e) => handleLanguageChange(e.target.value as AppSettings['language'])}
+            className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary">
+            <option value="auto">{t('settings.language.auto')}</option>
+            <option value="en">{t('settings.language.en')}</option>
+            <option value="zh-CN">{t('settings.language.zhCN')}</option>
+          </select>
+        </Field>
+      </Section>
+
+      <Section title={t('settings.sections.export')}>
         <div className="flex gap-2">
           <button onClick={() => handleExport('csv')}
-            className="px-3 py-1.5 text-xs font-mono bg-bg-primary border border-border-primary rounded hover:bg-bg-tertiary text-text-primary">Export CSV</button>
+            className="px-3 py-1.5 text-xs font-mono bg-bg-primary border border-border-primary rounded hover:bg-bg-tertiary text-text-primary">{t('settings.export.csv')}</button>
           <button onClick={() => handleExport('json')}
-            className="px-3 py-1.5 text-xs font-mono bg-bg-primary border border-border-primary rounded hover:bg-bg-tertiary text-text-primary">Export JSON</button>
+            className="px-3 py-1.5 text-xs font-mono bg-bg-primary border border-border-primary rounded hover:bg-bg-tertiary text-text-primary">{t('settings.export.json')}</button>
         </div>
       </Section>
 
       <div className="flex items-center gap-3">
         <button onClick={handleSave} disabled={saving}
           className="px-4 py-2 text-sm font-mono bg-status-blue text-white rounded hover:opacity-90 disabled:opacity-50">
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? t('settings.saving') : t('settings.save')}
         </button>
-        {saved && <span className="text-xs text-status-green font-mono">Saved!</span>}
+        {saved && <span className="text-xs text-status-green font-mono">{t('settings.saved')}</span>}
       </div>
     </div>
   )
