@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSystemStore } from '../../stores/systemStore'
 import { useHistoryQuery } from '../../hooks/useHistoryQuery'
+import { useTranslation } from '../../i18n/index'
 import RealtimeChart from '../charts/RealtimeChart'
 import HistoryChart from '../charts/HistoryChart'
 import Treemap from './Treemap'
@@ -21,6 +22,7 @@ function formatGB(bytes: number): string {
 type HistoryRange = '7d' | '30d' | '90d'
 
 export default function DiskOverview() {
+  const { t } = useTranslation()
   const diskVolumes = useSystemStore((s) => s.diskVolumes)
   const diskIO = useSystemStore((s) => s.diskIO)
   const [ioData, setIOData] = useState<{ time: number; value: number }[]>([])
@@ -54,20 +56,20 @@ export default function DiskOverview() {
               <div className="h-full rounded-full" style={{ width: `${vol.usagePercent}%`, backgroundColor: vol.usagePercent >= 90 ? '#f85149' : vol.usagePercent >= 75 ? '#d29922' : '#3fb950' }} />
             </div>
             <div className="flex justify-between text-xs text-text-muted font-mono">
-              <span>Used: {formatBytes(vol.used)}</span>
-              <span>Available: {formatBytes(vol.available)}</span>
-              <span>Total: {formatBytes(vol.total)}</span>
+              <span>{t('disk.used')}: {formatBytes(vol.used)}</span>
+              <span>{t('disk.available')}: {formatBytes(vol.available)}</span>
+              <span>{t('disk.total')}: {formatBytes(vol.total)}</span>
             </div>
           </div>
         ))}
       </div>
       <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
-        <h3 className="text-sm font-medium text-text-primary mb-2">Disk I/O</h3>
+        <h3 className="text-sm font-medium text-text-primary mb-2">{t('disk.io')}</h3>
         <RealtimeChart data={ioData} color="#d29922" formatValue={(v) => formatBytes(v)} unit="/s" />
       </div>
       <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-text-primary">Space History</h3>
+          <h3 className="text-sm font-medium text-text-primary">{t('disk.spaceHistory')}</h3>
           <div className="flex gap-1">
             {(['7d', '30d', '90d'] as const).map((r) => (
               <button key={r} onClick={() => setHistoryRange(r)}
@@ -75,17 +77,17 @@ export default function DiskOverview() {
             ))}
           </div>
         </div>
-        {historyLoading ? <div className="h-[250px] flex items-center justify-center text-text-muted font-mono text-sm">Loading...</div>
+        {historyLoading ? <div className="h-[250px] flex items-center justify-center text-text-muted font-mono text-sm">{t('common.loading')}</div>
           : <HistoryChart data={historyData} color="#d29922" formatValue={formatGB} unit=" GB" />}
       </div>
       <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-medium text-text-primary">File Size Analysis</h3>
+          <h3 className="text-sm font-medium text-text-primary">{t('disk.fileAnalysis')}</h3>
           <input value={scanPath} onChange={(e) => setScanPath(e.target.value)}
-            className="flex-1 bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs font-mono text-text-primary" placeholder="/path/to/scan" />
+            className="flex-1 bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs font-mono text-text-primary" placeholder={t('disk.scanPlaceholder')} />
           <button onClick={handleScan} disabled={scanning}
             className="px-3 py-1 text-xs font-mono bg-status-blue text-white rounded hover:opacity-90 disabled:opacity-50">
-            {scanning ? 'Scanning...' : 'Scan'}
+            {scanning ? t('disk.scanning') : t('disk.scan')}
           </button>
         </div>
         <Treemap data={scanData} onClickFile={(p) => window.api.revealFile(p)} />

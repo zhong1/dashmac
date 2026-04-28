@@ -1,3 +1,4 @@
+import { useTranslation } from '../../i18n/index'
 import type { FileEntry } from '../../types'
 
 interface BigFilesProps { data: FileEntry | null }
@@ -15,22 +16,23 @@ function flattenFiles(entry: FileEntry): FileEntry[] {
 }
 
 export default function BigFiles({ data }: BigFilesProps) {
+  const { t } = useTranslation()
   if (!data) return null
   const files = flattenFiles(data).sort((a, b) => b.size - a.size).slice(0, 50)
 
   return (
     <div className="bg-bg-secondary border border-border-primary rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border-primary">
-        <h3 className="text-sm font-medium text-text-primary">Top 50 Largest Files</h3>
+        <h3 className="text-sm font-medium text-text-primary">{t('disk.bigFiles.title')}</h3>
       </div>
       <div className="overflow-y-auto max-h-96">
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="text-text-muted border-b border-border-secondary">
-              <th className="text-left px-4 py-2 font-medium">#</th>
-              <th className="text-left px-4 py-2 font-medium">File</th>
-              <th className="text-right px-4 py-2 font-medium">Size</th>
-              <th className="text-right px-4 py-2 font-medium">Action</th>
+              <th className="text-left px-4 py-2 font-medium">{t('disk.bigFiles.number')}</th>
+              <th className="text-left px-4 py-2 font-medium">{t('disk.bigFiles.file')}</th>
+              <th className="text-right px-4 py-2 font-medium">{t('disk.bigFiles.size')}</th>
+              <th className="text-right px-4 py-2 font-medium">{t('disk.bigFiles.action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -40,7 +42,7 @@ export default function BigFiles({ data }: BigFilesProps) {
                 <td className="px-4 py-1.5 text-text-primary truncate max-w-[400px]" title={file.path}>{file.name}</td>
                 <td className="px-4 py-1.5 text-right text-status-yellow">{formatBytes(file.size)}</td>
                 <td className="px-4 py-1.5 text-right">
-                  <button onClick={() => window.api.revealFile(file.path)} className="text-status-blue hover:underline">Reveal</button>
+                  <button onClick={() => window.api.revealFile(file.path)} className="text-status-blue hover:underline">{t('disk.bigFiles.reveal')}</button>
                 </td>
               </tr>
             ))}

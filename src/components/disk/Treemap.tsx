@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { treemap, hierarchy, treemapSquarify } from 'd3-hierarchy'
+import { useTranslation } from '../../i18n/index'
 import type { FileEntry } from '../../types'
 
 interface TreemapProps {
@@ -19,6 +20,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function Treemap({ data, width = 800, height = 400, onClickFile }: TreemapProps) {
+  const { t } = useTranslation()
   const nodes = useMemo(() => {
     if (!data || !data.children?.length) return []
     const root = hierarchy(data)
@@ -29,7 +31,7 @@ export default function Treemap({ data, width = 800, height = 400, onClickFile }
     return root.leaves()
   }, [data, width, height])
 
-  if (!data) return <div className="text-text-muted font-mono text-sm">No data. Click "Scan" to analyze a directory.</div>
+  if (!data) return <div className="text-text-muted font-mono text-sm">{t('disk.treemapEmpty')}</div>
 
   return (
     <svg width={width} height={height} className="rounded-lg overflow-hidden">
