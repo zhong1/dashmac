@@ -1,4 +1,5 @@
 import { useSystemStore } from '../../stores/systemStore'
+import { useTranslation } from '../../i18n/index'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -18,6 +19,7 @@ function MiniBar({ percent, color }: { percent: number; color: string }) {
 }
 
 export default function TrayPanel() {
+  const { t } = useTranslation()
   const memory = useSystemStore((s) => s.memory)
   const diskVolumes = useSystemStore((s) => s.diskVolumes)
   const networkSpeed = useSystemStore((s) => s.networkSpeed)
@@ -28,11 +30,11 @@ export default function TrayPanel() {
   return (
     <div className="w-80 bg-bg-secondary rounded-lg border border-border-primary overflow-hidden">
       <div className="px-3 py-2 border-b border-border-primary">
-        <span className="text-xs font-mono font-semibold text-text-primary">DashMac</span>
+        <span className="text-xs font-mono font-semibold text-text-primary">{t('tray.name')}</span>
       </div>
       <div className="px-3 py-2 border-b border-border-secondary">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-text-muted">Memory</span>
+          <span className="text-xs text-text-muted">{t('tray.memory')}</span>
           <span className="text-xs font-mono text-text-primary">{memory ? `${memory.usagePercent.toFixed(0)}%` : '--'}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -44,19 +46,19 @@ export default function TrayPanel() {
       </div>
       <div className="px-3 py-2 border-b border-border-secondary">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-text-muted">Disk {primaryDisk?.mountPoint ?? ''}</span>
+          <span className="text-xs text-text-muted">{t('tray.diskMount', { mount: primaryDisk?.mountPoint ?? '' })}</span>
           <span className="text-xs font-mono text-text-primary">{diskPercent.toFixed(0)}%</span>
         </div>
         <div className="flex items-center gap-2">
           <MiniBar percent={diskPercent} color="#d29922" />
           <span className="text-xs font-mono text-text-secondary w-20 text-right">
-            {primaryDisk ? `${formatBytes(primaryDisk.available)} free` : '--'}
+            {primaryDisk ? t('tray.free', { size: formatBytes(primaryDisk.available) }) : '--'}
           </span>
         </div>
       </div>
       <div className="px-3 py-2 border-b border-border-secondary">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-text-muted">Network</span>
+          <span className="text-xs text-text-muted">{t('tray.network')}</span>
         </div>
         <div className="flex justify-between text-xs font-mono">
           <span className="text-status-blue">↓ {networkSpeed ? formatSpeed(networkSpeed.rxSpeed) : '--'}</span>
@@ -66,7 +68,7 @@ export default function TrayPanel() {
       <div className="p-2">
         <button onClick={() => window.api.openMainWindow()}
           className="w-full py-1.5 text-xs font-mono text-center bg-bg-tertiary border border-border-primary rounded hover:bg-border-secondary text-text-primary">
-          Open DashMac
+          {t('tray.open')}
         </button>
       </div>
     </div>
