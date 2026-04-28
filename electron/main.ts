@@ -9,6 +9,7 @@ import { collectProcesses } from './collectors/process'
 import { Scheduler } from './services/scheduler'
 import { downsampleOldData } from './services/aggregator'
 import { loadSettings, saveSettings as persistSettings } from './services/settingsStore'
+import { resolveLang, setLang, getLang, t } from './i18n/index'
 import type { AppSettings } from '../src/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -85,10 +86,16 @@ function registerIpcHandlers(): void {
   })
   ipcMain.handle('get:settings', async () => {
     const stored = loadSettings()
-    return stored  // resolvedLanguage placeholder; finalised in Task 9 once i18n is wired
+    return { ...stored, resolvedLanguage: resolveLang(stored.language, app.getLocale()) }
   })
   ipcMain.handle('save:settings', async (_event, settings: AppSettings) => {
     persistSettings(settings)
+    const newResolved = resolveLang(settings.language, app.getLocale())
+    if (newResolved !== getLang()) {
+      setLang(newResolved)
+      rebuildTrayMenu()
+      sendToAllWindows('i18n:lang-changed', newResolved)
+    }
   })
 
   ipcMain.on('action:reveal-file', (_event, filePath: string) => {
@@ -117,22 +124,25 @@ function createMainWindow(): void {
   mainWindow.on('closed', () => { mainWindow = null })
 }
 
+function rebuildTrayMenu(): void {
+  if (!tray) return
+  tray.setToolTip(t('tray.tooltip'))
+  const contextMenu = Menu.buildFromTemplate([
+    { label: t('tray.open'), click: () => {
+      if (mainWindow) { mainWindow.show(); mainWindow.focus() } else { createMainWindow() }
+    }},
+    { type: 'separator' },
+    { label: t('tray.quit'), click: () => app.quit() },
+  ])
+  tray.setContextMenu(contextMenu)
+}
+
 function createTray(): void {
   const iconPath = path.join(__dirname, '../../resources/trayTemplate.png')
   let icon: Electron.NativeImage
   try { icon = nativeImage.createFromPath(iconPath) } catch { icon = nativeImage.createEmpty() }
-
   tray = new Tray(icon)
-  tray.setToolTip('DashMac')
-
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Open DashMac', click: () => {
-      if (mainWindow) { mainWindow.show(); mainWindow.focus() } else { createMainWindow() }
-    }},
-    { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() },
-  ])
-  tray.setContextMenu(contextMenu)
+  rebuildTrayMenu()
 }
 
 function startScheduler(): void {
@@ -150,6 +160,9 @@ function startScheduler(): void {
 }
 
 app.whenReady().then(() => {
+  const stored = loadSettings()
+  const resolved = resolveLang(stored.language, app.getLocale())
+  setLang(resolved)
   registerIpcHandlers()
   createMainWindow()
   createTray()
