@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ProcessInfo } from '../../types'
+import { useTranslation } from '../../i18n/index'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -9,6 +10,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function ProcessList() {
+  const { t } = useTranslation()
   const [processes, setProcesses] = useState<ProcessInfo[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -23,21 +25,21 @@ export default function ProcessList() {
     return () => { active = false; clearInterval(interval) }
   }, [])
 
-  if (loading) return <div className="text-text-muted font-mono text-sm p-4">Loading processes...</div>
+  if (loading) return <div className="text-text-muted font-mono text-sm p-4">{t('memory.processList.loading')}</div>
 
   return (
     <div className="bg-bg-secondary border border-border-primary rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border-primary">
-        <h3 className="text-sm font-medium text-text-primary">Process Ranking</h3>
+        <h3 className="text-sm font-medium text-text-primary">{t('memory.processList.title')}</h3>
       </div>
       <div className="overflow-y-auto max-h-96">
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="text-text-muted border-b border-border-secondary">
-              <th className="text-left px-4 py-2 font-medium">Process</th>
-              <th className="text-right px-4 py-2 font-medium">PID</th>
-              <th className="text-right px-4 py-2 font-medium">Memory</th>
-              <th className="text-right px-4 py-2 font-medium">CPU %</th>
+              <th className="text-left px-4 py-2 font-medium">{t('memory.processList.process')}</th>
+              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.pid')}</th>
+              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.memory')}</th>
+              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.cpu')}</th>
             </tr>
           </thead>
           <tbody>

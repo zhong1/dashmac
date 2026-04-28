@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSystemStore } from '../../stores/systemStore'
 import { useHistoryQuery } from '../../hooks/useHistoryQuery'
+import { useTranslation } from '../../i18n/index'
 import RealtimeChart from '../charts/RealtimeChart'
 import HistoryChart from '../charts/HistoryChart'
 import PressureGauge from './PressureGauge'
@@ -20,6 +21,7 @@ function formatGB(bytes: number): string {
 type HistoryRange = '1h' | '24h' | '7d'
 
 export default function MemoryOverview() {
+  const { t } = useTranslation()
   const memory = useSystemStore((s) => s.memory)
   const [realtimeData, setRealtimeData] = useState<{ time: number; value: number }[]>([])
   const [historyRange, setHistoryRange] = useState<HistoryRange>('1h')
@@ -36,26 +38,26 @@ export default function MemoryOverview() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-5 gap-4">
-        <StatCard label="Total" value={memory ? formatBytes(memory.total) : '--'} />
-        <StatCard label="Used" value={memory ? formatBytes(memory.used) : '--'} color="#1f6feb" />
-        <StatCard label="Free" value={memory ? formatBytes(memory.free) : '--'} color="#3fb950" />
-        <StatCard label="Cached" value={memory ? formatBytes(memory.cached) : '--'} color="#d29922" />
+        <StatCard label={t('memory.total')} value={memory ? formatBytes(memory.total) : '--'} />
+        <StatCard label={t('memory.used')} value={memory ? formatBytes(memory.used) : '--'} color="#1f6feb" />
+        <StatCard label={t('memory.free')} value={memory ? formatBytes(memory.free) : '--'} color="#3fb950" />
+        <StatCard label={t('memory.cached')} value={memory ? formatBytes(memory.cached) : '--'} color="#d29922" />
         <div className="bg-bg-secondary border border-border-primary rounded-lg p-3 flex flex-col items-center justify-center">
-          <span className="text-xs text-text-muted mb-1">Pressure</span>
+          <span className="text-xs text-text-muted mb-1">{t('memory.pressure')}</span>
           <PressureGauge level={memory?.pressureLevel ?? 'normal'} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <StatCard label="Swap Used" value={memory ? formatBytes(memory.swapUsed) : '--'} />
-        <StatCard label="Swap Total" value={memory ? formatBytes(memory.swapTotal) : '--'} />
+        <StatCard label={t('memory.swapUsed')} value={memory ? formatBytes(memory.swapUsed) : '--'} />
+        <StatCard label={t('memory.swapTotal')} value={memory ? formatBytes(memory.swapTotal) : '--'} />
       </div>
       <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
-        <h3 className="text-sm font-medium text-text-primary mb-2">Real-time Memory Usage</h3>
+        <h3 className="text-sm font-medium text-text-primary mb-2">{t('memory.realtime')}</h3>
         <RealtimeChart data={realtimeData} color="#1f6feb" formatValue={(v) => v.toFixed(1)} unit="%" />
       </div>
       <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-text-primary">History</h3>
+          <h3 className="text-sm font-medium text-text-primary">{t('memory.history')}</h3>
           <div className="flex gap-1">
             {(['1h', '24h', '7d'] as const).map((r) => (
               <button key={r} onClick={() => setHistoryRange(r)}
@@ -66,7 +68,7 @@ export default function MemoryOverview() {
           </div>
         </div>
         {historyLoading ? (
-          <div className="h-[250px] flex items-center justify-center text-text-muted font-mono text-sm">Loading...</div>
+          <div className="h-[250px] flex items-center justify-center text-text-muted font-mono text-sm">{t('common.loading')}</div>
         ) : (
           <HistoryChart data={historyData} color="#1f6feb" formatValue={formatGB} unit=" GB" />
         )}
