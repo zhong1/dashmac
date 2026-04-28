@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { AppTraffic } from '../../types'
+import { useTranslation } from '../../i18n/index'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -9,6 +10,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function TrafficByApp() {
+  const { t } = useTranslation()
   const [traffic, setTraffic] = useState<AppTraffic[]>([])
   const [range, setRange] = useState<'24h' | '7d' | '30d'>('24h')
 
@@ -17,7 +19,7 @@ export default function TrafficByApp() {
   return (
     <div className="bg-bg-secondary border border-border-primary rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border-primary flex justify-between items-center">
-        <h3 className="text-sm font-medium text-text-primary">Traffic by Application</h3>
+        <h3 className="text-sm font-medium text-text-primary">{t('network.trafficByApp.title')}</h3>
         <div className="flex gap-1">
           {(['24h', '7d', '30d'] as const).map((r) => (
             <button key={r} onClick={() => setRange(r)}
@@ -26,15 +28,15 @@ export default function TrafficByApp() {
         </div>
       </div>
       {traffic.length === 0 ? (
-        <div className="p-4 text-text-muted font-mono text-xs">No traffic data yet. Data is collected over time.</div>
+        <div className="p-4 text-text-muted font-mono text-xs">{t('network.trafficByApp.empty')}</div>
       ) : (
         <div className="overflow-y-auto max-h-72">
           <table className="w-full text-xs font-mono">
             <thead>
               <tr className="text-text-muted border-b border-border-secondary">
-                <th className="text-left px-4 py-2 font-medium">Application</th>
-                <th className="text-right px-4 py-2 font-medium">Download</th>
-                <th className="text-right px-4 py-2 font-medium">Upload</th>
+                <th className="text-left px-4 py-2 font-medium">{t('network.trafficByApp.application')}</th>
+                <th className="text-right px-4 py-2 font-medium">{t('network.trafficByApp.download')}</th>
+                <th className="text-right px-4 py-2 font-medium">{t('network.trafficByApp.upload')}</th>
               </tr>
             </thead>
             <tbody>
