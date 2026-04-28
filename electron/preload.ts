@@ -17,6 +17,11 @@ const api: DashMacAPI = {
     ipcRenderer.on('realtime:network', handler)
     return () => ipcRenderer.removeListener('realtime:network', handler)
   },
+  onLangChanged: (callback: (lang: 'en' | 'zh-CN') => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, lang: 'en' | 'zh-CN') => callback(lang)
+    ipcRenderer.on('i18n:lang-changed', listener)
+    return () => ipcRenderer.removeListener('i18n:lang-changed', listener)
+  },
   queryHistory: (query) => ipcRenderer.invoke('query:history', query),
   queryProcesses: () => ipcRenderer.invoke('query:processes'),
   queryDiskScan: (path) => ipcRenderer.invoke('query:disk-scan', path),
