@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import en from './locales/en'
 import zhCN from './locales/zh-CN'
 import { lookup, interpolate, type NestedDict } from './lookup'
@@ -36,7 +36,7 @@ export function I18nProvider({
     return unsubscribe
   }, [])
 
-  const ctx: Ctx = {
+  const ctx = useMemo<Ctx>(() => ({
     lang,
     t: (key, vars) => translate(lang, key, vars),
     setLang: async (next) => {
@@ -44,7 +44,7 @@ export function I18nProvider({
       await window.api.saveSettings({ ...current, language: next })
       // No optimistic setLangState — wait for the main-process broadcast.
     },
-  }
+  }), [lang])
 
   return <I18nContext.Provider value={ctx}>{children}</I18nContext.Provider>
 }
