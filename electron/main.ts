@@ -8,6 +8,8 @@ import { collectNetwork, collectConnections } from './collectors/network'
 import { collectProcesses } from './collectors/process'
 import { Scheduler } from './services/scheduler'
 import { downsampleOldData } from './services/aggregator'
+import { loadSettings, saveSettings as persistSettings } from './services/settingsStore'
+import type { AppSettings } from '../src/types'
 
 let mainWindow: BrowserWindow | null = null
 let trayWindow: BrowserWindow | null = null
@@ -82,9 +84,12 @@ function registerIpcHandlers(): void {
     return ''
   })
   ipcMain.handle('get:settings', async () => {
-    return { realtimeInterval: 2000, historyInterval: 60000, retentionDays: 90, trayDisplayMetric: 'memory', launchAtLogin: false }
+    const stored = loadSettings()
+    return stored  // resolvedLanguage placeholder; finalised in Task 9 once i18n is wired
   })
-  ipcMain.handle('save:settings', async (_event, _settings) => {})
+  ipcMain.handle('save:settings', async (_event, settings: AppSettings) => {
+    persistSettings(settings)
+  })
 
   ipcMain.on('action:reveal-file', (_event, filePath: string) => {
     shell.showItemInFolder(filePath)
