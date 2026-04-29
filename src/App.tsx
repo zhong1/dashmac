@@ -5,14 +5,13 @@ import { useRealtimeData } from './hooks/useRealtimeData'
 import { useTranslation } from './i18n/index'
 import Overview from './components/dashboard/Overview'
 import MemoryOverview from './components/memory/MemoryOverview'
-import DiskOverview from './components/disk/DiskOverview'
 import NetworkOverview from './components/network/NetworkOverview'
 import FilesPage from './components/files/FilesPage'
 import Settings from './components/settings/Settings'
 import TrayPanel from './components/tray/TrayPanel'
 import ToastRoot from './components/common/Toast'
 
-type Page = 'dashboard' | 'memory' | 'disk' | 'network' | 'files' | 'settings'
+type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'settings'
 
 export default function App() {
   const isTray = window.location.hash === '#/tray'
@@ -54,8 +53,6 @@ function PageContent({ page }: { page: Page }) {
       return <Overview />
     case 'memory':
       return <MemoryOverview />
-    case 'disk':
-      return <DiskOverview />
     case 'network':
       return <NetworkOverview />
     case 'files':

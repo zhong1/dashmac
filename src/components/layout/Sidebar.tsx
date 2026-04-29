@@ -1,6 +1,6 @@
 import { useTranslation } from '../../i18n/index'
 
-type Page = 'dashboard' | 'memory' | 'disk' | 'network' | 'files' | 'settings'
+type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'settings'
 
 interface SidebarProps {
   activePage: Page
@@ -10,13 +10,12 @@ interface SidebarProps {
 const NAV_ICONS: Record<Page, string> = {
   dashboard: '⊞',
   memory: '☰',
-  disk: '◉',
   network: '⇅',
   files: '📁',
   settings: '⚙',
 }
 
-const NAV_ORDER: Page[] = ['dashboard', 'memory', 'disk', 'network', 'files', 'settings']
+const NAV_ORDER: Page[] = ['dashboard', 'memory', 'network', 'files', 'settings']
 
 export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
   const { t } = useTranslation()
