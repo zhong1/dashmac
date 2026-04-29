@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ProcessInfo } from '../../types'
 import { useTranslation } from '../../i18n/index'
 import { useToast } from '../../stores/toastStore'
 import ContextMenu, { type MenuItem } from '../files/ContextMenu'
+
+type SortColumn = 'name' | 'pid' | 'memory' | 'cpu'
+type SortDir = 'asc' | 'desc'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -18,6 +21,8 @@ export default function ProcessList() {
   const [loading, setLoading] = useState(true)
   const [selectedPid, setSelectedPid] = useState<number | null>(null)
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number; pid: number; name: string } | null>(null)
+  const [sort, setSort] = useState<{ column: SortColumn; dir: SortDir }>({ column: 'memory', dir: 'desc' })
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     let active = true
@@ -37,7 +42,29 @@ export default function ProcessList() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
+  const visible = useMemo(() => {
+    const filtered = query
+      ? processes.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+      : processes
+    const sign = sort.dir === 'asc' ? 1 : -1
+    return [...filtered].sort((a, b) => {
+      if (sort.column === 'name') return sign * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      if (sort.column === 'pid') return sign * (a.pid - b.pid)
+      if (sort.column === 'memory') return sign * (a.memoryUsage - b.memoryUsage)
+      if (sort.column === 'cpu') return sign * (a.cpuUsage - b.cpuUsage)
+      return 0
+    })
+  }, [processes, query, sort])
+
   const selectedProc = processes.find((p) => p.pid === selectedPid) ?? null
+
+  const handleSortClick = (column: SortColumn) => {
+    setSort((cur) => {
+      if (cur.column === column) return { column, dir: cur.dir === 'asc' ? 'desc' : 'asc' }
+      // Different column → default direction (numeric desc, name/pid asc)
+      return { column, dir: column === 'memory' || column === 'cpu' ? 'desc' : 'asc' }
+    })
+  }
 
   const dispatchKill = async (pid: number, name: string, signal: 'SIGTERM' | 'SIGKILL') => {
     const r = await window.api.killProcess(pid, name, signal)
@@ -76,8 +103,24 @@ export default function ProcessList() {
 
   return (
     <div className="bg-bg-secondary border border-border-primary rounded-lg overflow-hidden">
-      <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-border-primary flex items-center gap-3">
         <h3 className="text-sm font-medium text-text-primary">{t('memory.processList.title')}</h3>
+        <div className="relative flex-1 max-w-xs">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('memory.processList.search.placeholder')}
+            className="w-full bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs font-mono text-text-primary"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              aria-label={t('memory.processList.search.clear')}
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary px-1 text-xs"
+            >✕</button>
+          )}
+        </div>
         <button
           onClick={handleButtonClick}
           disabled={!selectedProc}
@@ -94,14 +137,14 @@ export default function ProcessList() {
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="text-text-muted border-b border-border-secondary">
-              <th className="text-left px-4 py-2 font-medium">{t('memory.processList.process')}</th>
-              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.pid')}</th>
-              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.memory')}</th>
-              <th className="text-right px-4 py-2 font-medium">{t('memory.processList.cpu')}</th>
+              <SortHeader col="name" sort={sort} onClick={handleSortClick} label={t('memory.processList.process')} />
+              <SortHeader col="pid" sort={sort} onClick={handleSortClick} label={t('memory.processList.pid')} align="right" />
+              <SortHeader col="memory" sort={sort} onClick={handleSortClick} label={t('memory.processList.memory')} align="right" />
+              <SortHeader col="cpu" sort={sort} onClick={handleSortClick} label={t('memory.processList.cpu')} align="right" />
             </tr>
           </thead>
           <tbody>
-            {processes.slice(0, 50).map((proc) => (
+            {visible.slice(0, 50).map((proc) => (
               <tr
                 key={`${proc.pid}-${proc.name}`}
                 onClick={() => setSelectedPid(proc.pid)}
@@ -130,6 +173,26 @@ export default function ProcessList() {
         />
       )}
     </div>
+  )
+}
+
+function SortHeader({
+  col, sort, onClick, label, align = 'left',
+}: {
+  col: SortColumn
+  sort: { column: SortColumn; dir: SortDir }
+  onClick: (c: SortColumn) => void
+  label: string
+  align?: 'left' | 'right'
+}) {
+  const indicator = sort.column === col ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : ''
+  return (
+    <th
+      onClick={() => onClick(col)}
+      className={`px-4 py-2 cursor-pointer select-none font-medium text-${align}`}
+    >
+      {label}{indicator}
+    </th>
   )
 }
 
