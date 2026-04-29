@@ -22,11 +22,25 @@ const api: DashMacAPI = {
     ipcRenderer.on('i18n:lang-changed', listener)
     return () => ipcRenderer.removeListener('i18n:lang-changed', listener)
   },
+  onDirChanged: (callback: (path: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, p: string) => callback(p)
+    ipcRenderer.on('fs:dir-changed', listener)
+    return () => ipcRenderer.removeListener('fs:dir-changed', listener)
+  },
   queryHistory: (query) => ipcRenderer.invoke('query:history', query),
   queryProcesses: () => ipcRenderer.invoke('query:processes'),
   queryDiskScan: (path) => ipcRenderer.invoke('query:disk-scan', path),
   queryConnections: () => ipcRenderer.invoke('query:connections'),
   queryAppTraffic: (range) => ipcRenderer.invoke('query:app-traffic', range),
+  listDirectory: (p: string) => ipcRenderer.invoke('fs:list', p),
+  fsCreateFolder: (parent: string, name: string) => ipcRenderer.invoke('fs:create-folder', parent, name),
+  fsCreateFile: (parent: string, name: string) => ipcRenderer.invoke('fs:create-file', parent, name),
+  fsRename: (oldPath: string, newName: string) => ipcRenderer.invoke('fs:rename', oldPath, newName),
+  fsTrash: (paths: string[]) => ipcRenderer.invoke('fs:trash', paths),
+  fsCopy: (paths: string[], destDir: string) => ipcRenderer.invoke('fs:copy', paths, destDir),
+  fsMove: (paths: string[], destDir: string) => ipcRenderer.invoke('fs:move', paths, destDir),
+  fsZip: (paths: string[], destDir: string) => ipcRenderer.invoke('fs:zip', paths, destDir),
+  fsOpen: (p: string) => ipcRenderer.invoke('fs:open', p),
   exportData: (format, type) => ipcRenderer.invoke('action:export', format, type),
   revealFile: (path) => ipcRenderer.send('action:reveal-file', path),
   openMainWindow: () => ipcRenderer.send('action:open-main-window'),
