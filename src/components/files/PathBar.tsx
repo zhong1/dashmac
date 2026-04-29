@@ -15,6 +15,8 @@ export default function PathBar() {
   const goUp = useFilesStore((s) => s.goUp)
   const refresh = useFilesStore((s) => s.refresh)
   const setShowHidden = useFilesStore((s) => s.setShowHidden)
+  const viewMode = useFilesStore((s) => s.viewMode)
+  const toggleAnalyze = useFilesStore((s) => s.toggleAnalyze)
 
   const [draft, setDraft] = useState(currentPath)
   const [errorFlash, setErrorFlash] = useState(false)
@@ -77,6 +79,9 @@ export default function PathBar() {
       <button onClick={toggleHidden}
         className={`px-2 py-1 rounded ${showHidden ? 'bg-bg-tertiary text-text-primary' : 'text-text-secondary hover:bg-bg-tertiary'}`}
         title={t('files.toolbar.toggleHidden')}>👁</button>
+      <button onClick={() => toggleAnalyze()}
+        className={`px-2 py-1 rounded ${viewMode === 'analyze' ? 'bg-bg-tertiary text-text-primary' : 'text-text-secondary hover:bg-bg-tertiary'}`}
+        title={viewMode === 'analyze' ? t('files.toolbar.list') : t('files.toolbar.analyze')}>📊</button>
     </div>
   )
 }
