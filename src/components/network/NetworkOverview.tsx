@@ -42,19 +42,19 @@ export default function NetworkOverview() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="flex gap-4">
         {networkInterfaces.map((iface) => (
-          <div key={iface.iface} className="bg-bg-secondary border border-border-primary rounded-lg p-3">
+          <div key={iface.iface} className="flex-1 bg-bg-secondary border border-border-primary rounded-lg p-3">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{iface.iface}</div>
             <div className="font-mono text-sm text-text-primary">{iface.ip4}</div>
             <div className="text-xs text-text-muted font-mono">{iface.type} - {iface.speed}Mbps</div>
           </div>
         ))}
-        <div className="bg-bg-secondary border border-border-primary rounded-lg p-3">
+        <div className="flex-1 bg-bg-secondary border border-border-primary rounded-lg p-3">
           <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{t('network.download')}</div>
           <div className="font-mono text-xl font-semibold text-status-blue">{networkSpeed ? formatSpeed(networkSpeed.rxSpeed) : '--'}</div>
         </div>
-        <div className="bg-bg-secondary border border-border-primary rounded-lg p-3">
+        <div className="flex-1 bg-bg-secondary border border-border-primary rounded-lg p-3">
           <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{t('network.upload')}</div>
           <div className="font-mono text-xl font-semibold text-status-green">{networkSpeed ? formatSpeed(networkSpeed.txSpeed) : '--'}</div>
         </div>
