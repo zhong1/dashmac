@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { DirEntry } from '../types'
+import type { DirEntry, FileEntry } from '../types'
 
 export type SortColumn = 'name' | 'size' | 'modified' | 'type'
 export type SortDir = 'asc' | 'desc'
@@ -17,6 +17,10 @@ interface FilesState {
   showHidden: boolean
   dirError: string | null
   loading: boolean
+  viewMode: 'list' | 'analyze'
+  analyzeData: FileEntry | null
+  analyzeLoading: boolean
+  analyzedPath: string | null
 
   navigate: (path: string) => Promise<void>
   goBack: () => Promise<void>
@@ -31,6 +35,8 @@ interface FilesState {
   setSort: (column: SortColumn) => void
   setClipboard: (clip: FileClipboard) => void
   setShowHidden: (v: boolean) => void
+  toggleAnalyze: () => Promise<void>
+  rescanCurrent: () => Promise<void>
 }
 
 const HOME_FALLBACK = '/'
@@ -46,6 +52,10 @@ export const useFilesStore = create<FilesState>((set, get) => ({
   showHidden: false,
   dirError: null,
   loading: false,
+  viewMode: 'list',
+  analyzeData: null,
+  analyzeLoading: false,
+  analyzedPath: null,
 
   navigate: async (target: string) => {
     set({ loading: true })
@@ -175,6 +185,35 @@ export const useFilesStore = create<FilesState>((set, get) => ({
   setClipboard: (clip) => set({ clipboard: clip }),
 
   setShowHidden: (v) => set({ showHidden: v }),
+
+  toggleAnalyze: async () => {
+    const { viewMode, currentPath, analyzedPath, analyzeData } = get()
+    if (viewMode === 'analyze') {
+      set({ viewMode: 'list' })
+      return
+    }
+    set({ viewMode: 'analyze' })
+    if (analyzedPath !== currentPath || analyzeData === null) {
+      set({ analyzeLoading: true })
+      try {
+        const data = await window.api.queryDiskScan(currentPath)
+        set({ analyzeData: data, analyzedPath: currentPath, analyzeLoading: false })
+      } catch {
+        set({ analyzeLoading: false })
+      }
+    }
+  },
+
+  rescanCurrent: async () => {
+    const { currentPath } = get()
+    set({ analyzeLoading: true })
+    try {
+      const data = await window.api.queryDiskScan(currentPath)
+      set({ analyzeData: data, analyzedPath: currentPath, analyzeLoading: false })
+    } catch {
+      set({ analyzeLoading: false })
+    }
+  },
 }))
 
 // Wire IPC listener exactly once at module load.
