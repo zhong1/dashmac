@@ -7,19 +7,22 @@ import Overview from './components/dashboard/Overview'
 import MemoryOverview from './components/memory/MemoryOverview'
 import DiskOverview from './components/disk/DiskOverview'
 import NetworkOverview from './components/network/NetworkOverview'
+import FilesPage from './components/files/FilesPage'
 import Settings from './components/settings/Settings'
 import TrayPanel from './components/tray/TrayPanel'
+import ToastRoot from './components/common/Toast'
 
-type Page = 'dashboard' | 'memory' | 'disk' | 'network' | 'settings'
+type Page = 'dashboard' | 'memory' | 'disk' | 'network' | 'files' | 'settings'
 
 export default function App() {
   const isTray = window.location.hash === '#/tray'
 
-  if (isTray) {
-    return <TrayApp />
-  }
-
-  return <MainApp />
+  return (
+    <>
+      {isTray ? <TrayApp /> : <MainApp />}
+      <ToastRoot />
+    </>
+  )
 }
 
 function TrayApp() {
@@ -55,6 +58,8 @@ function PageContent({ page }: { page: Page }) {
       return <DiskOverview />
     case 'network':
       return <NetworkOverview />
+    case 'files':
+      return <FilesPage />
     case 'settings':
       return <Settings />
   }
