@@ -79,3 +79,65 @@ export async function rename(oldPath: string, newName: string): Promise<string> 
   await fs.rename(oldPath, target)
   return target
 }
+
+function splitExt(name: string): { base: string; ext: string } {
+  const ext = path.extname(name)
+  const base = ext ? name.slice(0, -ext.length) : name
+  return { base, ext }
+}
+
+export async function resolveDuplicateName(name: string, dirPath: string): Promise<string> {
+  const dir = path.resolve(expandTilde(dirPath))
+  try { await fs.access(path.join(dir, name)) }
+  catch { return name }  // ENOENT → no collision
+
+  const { base, ext } = splitExt(name)
+  const firstAttempt = `${base} (copy)${ext}`
+  try { await fs.access(path.join(dir, firstAttempt)) }
+  catch { return firstAttempt }
+
+  for (let i = 2; i < 1000; i++) {
+    const attempt = `${base} (copy ${i})${ext}`
+    try { await fs.access(path.join(dir, attempt)) }
+    catch { return attempt }
+  }
+  throw new Error(`Could not find available name for ${name} in ${dir}`)
+}
+
+async function copyRecursive(src: string, dest: string): Promise<void> {
+  const stat = await fs.stat(src)
+  if (stat.isDirectory()) {
+    await fs.mkdir(dest)
+    const entries = await fs.readdir(src)
+    for (const e of entries) await copyRecursive(path.join(src, e), path.join(dest, e))
+  } else {
+    await fs.copyFile(src, dest)
+  }
+}
+
+export async function copyMany(srcs: string[], destDir: string): Promise<void> {
+  const dest = path.resolve(expandTilde(destDir))
+  for (const src of srcs) {
+    const baseName = path.basename(src)
+    const finalName = await resolveDuplicateName(baseName, dest)
+    await copyRecursive(src, path.join(dest, finalName))
+  }
+}
+
+export async function moveMany(srcs: string[], destDir: string): Promise<void> {
+  const dest = path.resolve(expandTilde(destDir))
+  for (const src of srcs) {
+    const srcParent = path.dirname(src)
+    if (srcParent === dest) {
+      throw new Error(`Cannot move into the source folder itself: ${src}`)
+    }
+    // Reject if dest is inside src (would move folder into its own subtree)
+    const relative = path.relative(src, dest)
+    if (relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))) {
+      throw new Error(`Cannot move into a subdirectory or ancestor of source: ${src}`)
+    }
+    const baseName = path.basename(src)
+    const finalName = await resolveDuplicateName(baseName, dest)
+    await fs.rename(src, path.join(dest, finalName))
+  }
+}

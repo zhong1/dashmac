@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { listDirectory, validateName, mkdir, createFile, rename } from '../../electron/services/fileSystem'
+import { listDirectory, validateName, mkdir, createFile, rename, resolveDuplicateName, copyMany, moveMany } from '../../electron/services/fileSystem'
 
 let tmp: string
 beforeEach(() => {
@@ -113,5 +113,87 @@ describe('rename', () => {
     const a = path.join(tmp, 'a.txt'); fs.writeFileSync(a, '')
     fs.writeFileSync(path.join(tmp, 'b.txt'), '')
     await expect(rename(a, 'b.txt')).rejects.toMatchObject({ code: 'EEXIST' })
+  })
+})
+
+describe('resolveDuplicateName', () => {
+  test('returns name unchanged when no collision', async () => {
+    expect(await resolveDuplicateName('foo.txt', tmp)).toBe('foo.txt')
+  })
+
+  test('appends "(copy)" before the extension', async () => {
+    fs.writeFileSync(path.join(tmp, 'foo.txt'), '')
+    expect(await resolveDuplicateName('foo.txt', tmp)).toBe('foo (copy).txt')
+  })
+
+  test('appends "(copy 2)" when "(copy)" also exists', async () => {
+    fs.writeFileSync(path.join(tmp, 'foo.txt'), '')
+    fs.writeFileSync(path.join(tmp, 'foo (copy).txt'), '')
+    expect(await resolveDuplicateName('foo.txt', tmp)).toBe('foo (copy 2).txt')
+  })
+
+  test('handles names without an extension', async () => {
+    fs.writeFileSync(path.join(tmp, 'foo'), '')
+    expect(await resolveDuplicateName('foo', tmp)).toBe('foo (copy)')
+  })
+
+  test('handles directories (no extension)', async () => {
+    fs.mkdirSync(path.join(tmp, 'mydir'))
+    expect(await resolveDuplicateName('mydir', tmp)).toBe('mydir (copy)')
+  })
+})
+
+describe('copyMany', () => {
+  test('copies a single file to a destination directory', async () => {
+    const src = path.join(tmp, 'a.txt')
+    fs.writeFileSync(src, 'hello')
+    const dest = path.join(tmp, 'sub'); fs.mkdirSync(dest)
+    await copyMany([src], dest)
+    expect(fs.readFileSync(path.join(dest, 'a.txt'), 'utf8')).toBe('hello')
+    expect(fs.existsSync(src)).toBe(true)  // copy preserves source
+  })
+
+  test('appends "(copy)" suffix on collision', async () => {
+    const src = path.join(tmp, 'a.txt')
+    fs.writeFileSync(src, 'hello')
+    const dest = path.join(tmp, 'sub'); fs.mkdirSync(dest)
+    fs.writeFileSync(path.join(dest, 'a.txt'), 'pre-existing')
+    await copyMany([src], dest)
+    expect(fs.readFileSync(path.join(dest, 'a.txt'), 'utf8')).toBe('pre-existing')
+    expect(fs.readFileSync(path.join(dest, 'a (copy).txt'), 'utf8')).toBe('hello')
+  })
+
+  test('recursively copies a directory', async () => {
+    const srcDir = path.join(tmp, 'src'); fs.mkdirSync(srcDir)
+    fs.writeFileSync(path.join(srcDir, 'a.txt'), 'x')
+    fs.mkdirSync(path.join(srcDir, 'inner'))
+    fs.writeFileSync(path.join(srcDir, 'inner', 'b.txt'), 'y')
+    const dest = path.join(tmp, 'dest'); fs.mkdirSync(dest)
+    await copyMany([srcDir], dest)
+    expect(fs.readFileSync(path.join(dest, 'src', 'a.txt'), 'utf8')).toBe('x')
+    expect(fs.readFileSync(path.join(dest, 'src', 'inner', 'b.txt'), 'utf8')).toBe('y')
+  })
+})
+
+describe('moveMany', () => {
+  test('moves a file (source removed)', async () => {
+    const src = path.join(tmp, 'a.txt')
+    fs.writeFileSync(src, 'hello')
+    const dest = path.join(tmp, 'sub'); fs.mkdirSync(dest)
+    await moveMany([src], dest)
+    expect(fs.readFileSync(path.join(dest, 'a.txt'), 'utf8')).toBe('hello')
+    expect(fs.existsSync(src)).toBe(false)
+  })
+
+  test('rejects when destination equals source parent', async () => {
+    const src = path.join(tmp, 'a.txt')
+    fs.writeFileSync(src, 'x')
+    await expect(moveMany([src], tmp)).rejects.toThrow(/source/i)
+  })
+
+  test('rejects when destination is inside source (ancestor)', async () => {
+    const srcDir = path.join(tmp, 'parent'); fs.mkdirSync(srcDir)
+    const innerDir = path.join(srcDir, 'inner'); fs.mkdirSync(innerDir)
+    await expect(moveMany([srcDir], innerDir)).rejects.toThrow(/ancestor|inside/i)
   })
 })
