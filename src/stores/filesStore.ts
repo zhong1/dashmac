@@ -37,6 +37,7 @@ interface FilesState {
   setShowHidden: (v: boolean) => void
   toggleAnalyze: () => Promise<void>
   rescanCurrent: () => Promise<void>
+  enterAnalyze: (path: string) => Promise<void>
 }
 
 const HOME_FALLBACK = '/'
@@ -212,6 +213,20 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       set({ analyzeData: data, analyzedPath: currentPath, analyzeLoading: false })
     } catch {
       set({ analyzeLoading: false })
+    }
+  },
+
+  enterAnalyze: async (path: string) => {
+    await get().navigate(path)
+    set({ viewMode: 'analyze' })
+    if (get().analyzedPath !== path || get().analyzeData === null) {
+      set({ analyzeLoading: true })
+      try {
+        const data = await window.api.queryDiskScan(path)
+        set({ analyzeData: data, analyzedPath: path, analyzeLoading: false })
+      } catch {
+        set({ analyzeLoading: false })
+      }
     }
   },
 }))
