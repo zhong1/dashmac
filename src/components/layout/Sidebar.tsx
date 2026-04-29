@@ -22,7 +22,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
   const { t } = useTranslation()
   return (
     <aside className="w-48 h-full bg-bg-secondary border-r border-border-primary flex flex-col">
-      <div className="p-4 border-b border-border-primary">
+      <div className="pt-10 px-4 pb-4 border-b border-border-primary app-drag">
         <h1 className="text-lg font-bold text-text-primary font-mono">DashMac</h1>
       </div>
       <nav className="flex-1 py-2">
