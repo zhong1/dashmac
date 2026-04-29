@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { listDirectory, validateName } from '../../electron/services/fileSystem'
+import { listDirectory, validateName, mkdir, createFile, rename } from '../../electron/services/fileSystem'
 
 let tmp: string
 beforeEach(() => {
@@ -62,5 +62,56 @@ describe('listDirectory', () => {
     const file = path.join(tmp, 'f.txt')
     fs.writeFileSync(file, '')
     await expect(listDirectory(file)).rejects.toMatchObject({ code: 'ENOTDIR' })
+  })
+})
+
+describe('mkdir', () => {
+  test('creates a folder and returns its absolute path', async () => {
+    const p = await mkdir(tmp, 'newfolder')
+    expect(p).toBe(path.join(tmp, 'newfolder'))
+    expect(fs.statSync(p).isDirectory()).toBe(true)
+  })
+
+  test('throws when target exists', async () => {
+    fs.mkdirSync(path.join(tmp, 'exists'))
+    await expect(mkdir(tmp, 'exists')).rejects.toMatchObject({ code: 'EEXIST' })
+  })
+})
+
+describe('createFile', () => {
+  test('creates an empty file', async () => {
+    const p = await createFile(tmp, 'a.txt')
+    expect(p).toBe(path.join(tmp, 'a.txt'))
+    expect(fs.statSync(p).isFile()).toBe(true)
+    expect(fs.readFileSync(p, 'utf8')).toBe('')
+  })
+
+  test('throws when target exists', async () => {
+    fs.writeFileSync(path.join(tmp, 'a.txt'), 'x')
+    await expect(createFile(tmp, 'a.txt')).rejects.toMatchObject({ code: 'EEXIST' })
+  })
+})
+
+describe('rename', () => {
+  test('renames a file in place', async () => {
+    const old = path.join(tmp, 'old.txt')
+    fs.writeFileSync(old, 'x')
+    const p = await rename(old, 'new.txt')
+    expect(p).toBe(path.join(tmp, 'new.txt'))
+    expect(fs.existsSync(old)).toBe(false)
+    expect(fs.existsSync(p)).toBe(true)
+  })
+
+  test('rejects invalid new name', async () => {
+    const old = path.join(tmp, 'old.txt')
+    fs.writeFileSync(old, 'x')
+    await expect(rename(old, '')).rejects.toThrow(/invalid name/i)
+    await expect(rename(old, 'a/b')).rejects.toThrow(/invalid name/i)
+  })
+
+  test('rejects when target exists', async () => {
+    const a = path.join(tmp, 'a.txt'); fs.writeFileSync(a, '')
+    fs.writeFileSync(path.join(tmp, 'b.txt'), '')
+    await expect(rename(a, 'b.txt')).rejects.toMatchObject({ code: 'EEXIST' })
   })
 })

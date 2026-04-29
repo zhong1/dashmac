@@ -46,3 +46,36 @@ export async function listDirectory(rawPath: string): Promise<DirEntry[]> {
   }
   return entries
 }
+
+export async function mkdir(parent: string, name: string): Promise<string> {
+  if (!validateName(name)) throw new Error(`Invalid name: ${name}`)
+  const target = path.join(path.resolve(expandTilde(parent)), name)
+  await fs.mkdir(target)
+  return target
+}
+
+export async function createFile(parent: string, name: string): Promise<string> {
+  if (!validateName(name)) throw new Error(`Invalid name: ${name}`)
+  const target = path.join(path.resolve(expandTilde(parent)), name)
+  // Use 'wx' to fail if target exists
+  const handle = await fs.open(target, 'wx')
+  await handle.close()
+  return target
+}
+
+export async function rename(oldPath: string, newName: string): Promise<string> {
+  if (!validateName(newName)) throw new Error(`Invalid name: ${newName}`)
+  const dir = path.dirname(oldPath)
+  const target = path.join(dir, newName)
+  // Manually check existence to throw EEXIST instead of clobbering
+  try {
+    await fs.access(target)
+    const err = new Error(`Target exists: ${target}`) as NodeJS.ErrnoException
+    err.code = 'EEXIST'
+    throw err
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') throw err  // re-throw EEXIST or unexpected
+  }
+  await fs.rename(oldPath, target)
+  return target
+}
