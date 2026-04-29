@@ -13,6 +13,7 @@ export const DEFAULTS: AppSettings = {
   resolvedLanguage: 'en',
   fileShortcuts: [],
   showHiddenFiles: false,
+  customCommands: [],
 }
 
 function defaultPath(): string {
