@@ -9,7 +9,7 @@ const en = {
   },
   pages: {
     dashboard: 'Dashboard',
-    memory: 'Memory Analysis',
+    memory: 'Memory Management',
     disk: 'Disk Analysis',
     network: 'Network Analysis',
     files: 'Files',
@@ -213,6 +213,14 @@ const en = {
     export: {
       csv: 'Export CSV',
       json: 'Export JSON',
+    },
+  },
+  processControl: {
+    killSelected: 'Quit {name}',
+    killSelectedDisabled: 'Quit process',
+    menu: {
+      quit: 'Quit',
+      forceQuit: 'Force Quit',
     },
   },
 }

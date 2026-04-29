@@ -11,7 +11,7 @@ const zhCN: typeof en = {
   },
   pages: {
     dashboard: '仪表盘',
-    memory: '内存分析',
+    memory: '内存管理',
     disk: '磁盘分析',
     network: '网络分析',
     files: '文件',
@@ -215,6 +215,14 @@ const zhCN: typeof en = {
     export: {
       csv: '导出 CSV',
       json: '导出 JSON',
+    },
+  },
+  processControl: {
+    killSelected: '退出 {name}',
+    killSelectedDisabled: '退出进程',
+    menu: {
+      quit: '退出',
+      forceQuit: '强制退出',
     },
   },
 }
