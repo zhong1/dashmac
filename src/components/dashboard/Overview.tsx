@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react'
 import { useSystemStore } from '../../stores/systemStore'
+import { useFilesStore } from '../../stores/filesStore'
 import { useTranslation } from '../../i18n/index'
+
+type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'settings'
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -26,13 +30,18 @@ function ProgressBar({ percent, color }: { percent: number; color: string }) {
   )
 }
 
-export default function Overview() {
+export default function Overview({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const { t } = useTranslation()
   const memory = useSystemStore((s) => s.memory)
   const diskVolumes = useSystemStore((s) => s.diskVolumes)
   const diskIO = useSystemStore((s) => s.diskIO)
   const networkSpeed = useSystemStore((s) => s.networkSpeed)
   const networkInterfaces = useSystemStore((s) => s.networkInterfaces)
+  const [shortcuts, setShortcuts] = useState<string[]>([])
+
+  useEffect(() => {
+    window.api.getSettings().then((s) => setShortcuts(s.fileShortcuts ?? []))
+  }, [])
 
   const memPercent = memory?.usagePercent ?? 0
   const memLevel = memPercent >= 90 ? 'red' : memPercent >= 75 ? 'yellow' : 'green'
@@ -40,11 +49,29 @@ export default function Overview() {
   const diskPercent = primaryDisk ? (primaryDisk.used / primaryDisk.total) * 100 : 0
   const diskLevel = diskPercent >= 90 ? 'red' : diskPercent >= 75 ? 'yellow' : 'green'
 
+  const handleCardDoubleClick = (kind: 'memory' | 'disk' | 'network') => {
+    if (kind === 'memory') onNavigate('memory')
+    else if (kind === 'network') onNavigate('network')
+    else {
+      // Disk → Files page in Analyze view scanning '/'.
+      // Use getState() because this is an event handler, not a subscription.
+      useFilesStore.getState().enterAnalyze('/')
+      onNavigate('files')
+    }
+  }
+
+  const handleShortcutDoubleClick = (path: string) => {
+    // getState() pattern: read store action without subscribing.
+    useFilesStore.getState().navigate(path)
+    onNavigate('files')
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
         {/* Memory Card */}
-        <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
+        <div onDoubleClick={() => handleCardDoubleClick('memory')}
+          className="bg-bg-secondary border border-border-primary rounded-lg p-4 cursor-pointer hover:bg-bg-tertiary">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.memory')}</span>
             <StatusDot level={memLevel} />
@@ -59,7 +86,8 @@ export default function Overview() {
         </div>
 
         {/* Disk Card */}
-        <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
+        <div onDoubleClick={() => handleCardDoubleClick('disk')}
+          className="bg-bg-secondary border border-border-primary rounded-lg p-4 cursor-pointer hover:bg-bg-tertiary">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.disk')}</span>
             <StatusDot level={diskLevel} />
@@ -74,7 +102,8 @@ export default function Overview() {
         </div>
 
         {/* Network Card */}
-        <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
+        <div onDoubleClick={() => handleCardDoubleClick('network')}
+          className="bg-bg-secondary border border-border-primary rounded-lg p-4 cursor-pointer hover:bg-bg-tertiary">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-text-secondary uppercase tracking-wider">{t('overview.network')}</span>
             <StatusDot level="green" />
@@ -89,6 +118,33 @@ export default function Overview() {
             {networkInterfaces[0]?.iface ?? '--'}: {networkInterfaces[0]?.ip4 ?? '--'}
           </div>
         </div>
+      </div>
+
+      {/* Shortcuts section */}
+      <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
+        <h3 className="text-sm font-medium text-text-primary mb-3">
+          {t('dashboard.shortcuts.title')}
+        </h3>
+        {shortcuts.length === 0 ? (
+          <div className="text-xs text-text-muted py-2">{t('dashboard.shortcuts.empty')}</div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {shortcuts.map((p) => (
+              <div
+                key={p}
+                onDoubleClick={() => handleShortcutDoubleClick(p)}
+                title={p}
+                className="flex items-center gap-3 px-2 py-1.5 rounded cursor-pointer hover:bg-bg-tertiary"
+              >
+                <span className="text-base">📁</span>
+                <span className="text-sm font-mono text-text-primary truncate flex-1">
+                  {p.split('/').pop() || p}
+                </span>
+                <span className="text-xs font-mono text-text-muted truncate">{p}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
