@@ -40,17 +40,17 @@ function MainApp() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={t(`pages.${page}`)} />
         <main className="flex-1 overflow-y-auto p-4">
-          <PageContent page={page} />
+          <PageContent page={page} onNavigate={setPage} />
         </main>
       </div>
     </div>
   )
 }
 
-function PageContent({ page }: { page: Page }) {
+function PageContent({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
   switch (page) {
     case 'dashboard':
-      return <Overview />
+      return <Overview onNavigate={onNavigate} />
     case 'memory':
       return <MemoryOverview />
     case 'network':
