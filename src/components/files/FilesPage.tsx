@@ -7,6 +7,8 @@ import FileSidebar from './FileSidebar'
 import PathBar from './PathBar'
 import FileList from './FileList'
 import ContextMenu, { type MenuItem } from './ContextMenu'
+import Treemap from './Treemap'
+import BigFiles from './BigFiles'
 
 type MenuState =
   | { kind: 'row'; x: number; y: number; entry: DirEntry }
@@ -22,6 +24,11 @@ export default function FilesPage() {
   const setClipboard = useFilesStore((s) => s.setClipboard)
   const setSelection = useFilesStore((s) => s.setSelection)
   const navigate = useFilesStore((s) => s.navigate)
+  const viewMode = useFilesStore((s) => s.viewMode)
+  const analyzeData = useFilesStore((s) => s.analyzeData)
+  const analyzeLoading = useFilesStore((s) => s.analyzeLoading)
+  const analyzedPath = useFilesStore((s) => s.analyzedPath)
+  const rescanCurrent = useFilesStore((s) => s.rescanCurrent)
   const [menu, setMenu] = useState<MenuState>(null)
   const [renamingPath, setRenamingPath] = useState<string | null>(null)
 
@@ -121,13 +128,23 @@ export default function FilesPage() {
       <FileSidebar />
       <div className="flex-1 flex flex-col">
         <PathBar />
-        <FileList
-          onContextRow={openRowMenu}
-          onContextEmpty={openEmptyMenu}
-          renamingPath={renamingPath}
-          onRenameSubmit={handleRenameSubmit}
-          onRenameCancel={() => setRenamingPath(null)}
-        />
+        {viewMode === 'list' ? (
+          <FileList
+            onContextRow={openRowMenu}
+            onContextEmpty={openEmptyMenu}
+            renamingPath={renamingPath}
+            onRenameSubmit={handleRenameSubmit}
+            onRenameCancel={() => setRenamingPath(null)}
+          />
+        ) : (
+          <AnalyzeView
+            analyzedPath={analyzedPath}
+            currentPath={currentPath}
+            analyzeData={analyzeData}
+            analyzeLoading={analyzeLoading}
+            onRescan={rescanCurrent}
+          />
+        )}
       </div>
       {menu && (
         <ContextMenu
@@ -155,4 +172,58 @@ async function uniqueDefault(parent: string, base: string): Promise<string> {
 function parentOf(p: string): string {
   const idx = p.lastIndexOf('/')
   return idx <= 0 ? '/' : p.slice(0, idx)
+}
+
+function AnalyzeView({
+  analyzedPath, currentPath, analyzeData, analyzeLoading, onRescan,
+}: {
+  analyzedPath: string | null
+  currentPath: string
+  analyzeData: import('../../types').FileEntry | null
+  analyzeLoading: boolean
+  onRescan: () => Promise<void>
+}) {
+  const { t } = useTranslation()
+  const stale = analyzedPath !== null && analyzedPath !== currentPath
+
+  return (
+    <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-mono text-text-muted">
+          {analyzedPath ? t('files.analyze.analyzedPath', { path: analyzedPath }) : ''}
+        </span>
+        {stale && (
+          <button onClick={() => onRescan()}
+            className="px-3 py-1 text-xs font-mono bg-status-yellow text-bg-primary rounded">
+            {t('files.analyze.scanCurrent', { path: currentPath })}
+          </button>
+        )}
+        {!stale && analyzedPath && (
+          <button onClick={() => onRescan()}
+            className="px-3 py-1 text-xs font-mono bg-bg-primary border border-border-primary text-text-secondary rounded hover:bg-bg-tertiary">
+            {t('files.analyze.rescan')}
+          </button>
+        )}
+      </div>
+
+      {analyzeLoading && (
+        <div className="flex-1 flex items-center justify-center text-text-muted font-mono text-sm">
+          {analyzedPath ? t('files.analyze.loading', { path: analyzedPath }) : t('files.analyze.loading', { path: currentPath })}
+        </div>
+      )}
+
+      {!analyzeLoading && analyzeData && (
+        <>
+          <Treemap data={analyzeData} onClickFile={(p) => window.api.revealFile(p)} />
+          <BigFiles data={analyzeData} />
+        </>
+      )}
+
+      {!analyzeLoading && !analyzeData && (
+        <div className="flex-1 flex items-center justify-center text-text-muted font-mono text-sm">
+          {t('files.analyze.treemapEmpty')}
+        </div>
+      )}
+    </div>
+  )
 }
