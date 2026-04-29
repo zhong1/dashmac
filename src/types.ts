@@ -164,6 +164,14 @@ export interface DashMacAPI {
     | { ok: false; cancelled: true }
     | { ok: false; message: string }
   >
+  runCommand: (
+    commandId: string,
+    paths: string[],
+  ) => Promise<
+    | { ok: true; runId: string }
+    | { ok: false; message: string }
+  >
+  onCommandProgress: (callback: (event: CustomCommandProgressEvent) => void) => () => void
 }
 
 export interface AppSettings {
@@ -176,7 +184,20 @@ export interface AppSettings {
   resolvedLanguage: 'en' | 'zh-CN'
   fileShortcuts: string[]      // NEW; absolute paths; default []
   showHiddenFiles: boolean     // NEW; default false
+  customCommands: CustomCommand[]
 }
+
+export interface CustomCommand {
+  id: string
+  label: string
+  command: string
+}
+
+export type CustomCommandProgressEvent =
+  | { type: 'start'; runId: string; commandLabel: string; total: number }
+  | { type: 'advance'; runId: string; done: number; current: string }
+  | { type: 'fileError'; runId: string; path: string; message: string; stderr: string }
+  | { type: 'finish'; runId: string; ok: number; failed: number }
 
 declare global {
   interface Window {
