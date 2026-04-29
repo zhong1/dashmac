@@ -57,7 +57,12 @@ export default function FilesPage() {
     })
   }, [entries, showHidden, sort])
 
-  useEffect(() => { navigate('~') }, [navigate])
+  useEffect(() => {
+    // Preserve last-visited path across tab switches: only navigate to home
+    // when the store is in its default state (currentPath === '/').
+    // Reading via getState() avoids re-running this effect when currentPath changes.
+    if (useFilesStore.getState().currentPath === '/') navigate('~')
+  }, [navigate])
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -222,6 +227,26 @@ export default function FilesPage() {
       }},
       { label: '', separator: true, onClick: () => {} },
       { label: t('files.contextMenu.revealInFinder'), onClick: () => window.api.revealFile(entry.path) },
+      { label: '', separator: true, onClick: () => {} },
+      {
+        label: t('files.contextMenu.addToShortcuts'),
+        disabled: targets.some((p) => {
+          const e = visible.find((v) => v.path === p)
+          return !e || !e.isDirectory
+        }),
+        onClick: async () => {
+          const settings = await window.api.getSettings()
+          const existing = new Set(settings.fileShortcuts ?? [])
+          const toAdd = targets.filter((p) => !existing.has(p))
+          if (toAdd.length === 0) {
+            toast.info(t('files.toast.shortcutExists'))
+            return
+          }
+          const next = [...(settings.fileShortcuts ?? []), ...toAdd]
+          await window.api.saveSettings({ ...settings, fileShortcuts: next })
+          toast.success(t('files.toast.addedShortcut'))
+        },
+      },
     ]
   }
 
