@@ -60,4 +60,23 @@ describe('t and setLang', () => {
     // 'tray.tooltip' is 'DashMac' in both dictionaries by design.
     expect(t('tray.tooltip')).toBe('DashMac')
   })
+
+  test('interpolates {var} placeholders when vars provided', () => {
+    setLang('en')
+    // tray.tooltip is 'DashMac' — no placeholder; verify pass-through with empty vars
+    expect(t('tray.tooltip', {})).toBe('DashMac')
+    // Use a key that doesn't exist; t() falls back to the key itself,
+    // and interpolate should still process placeholders in the key string.
+    expect(t('hello {name}', { name: 'world' })).toBe('hello world')
+  })
+
+  test('interpolation works on a key fallback string', () => {
+    setLang('en')
+    expect(t('a {x} b', { x: 'middle' })).toBe('a middle b')
+  })
+
+  test('omitting vars leaves placeholders intact', () => {
+    setLang('en')
+    expect(t('hello {name}')).toBe('hello {name}')
+  })
 })

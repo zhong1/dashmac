@@ -1,6 +1,6 @@
 import en from './locales/en'
 import zhCN from './locales/zh-CN'
-import { lookup } from '../../src/i18n/lookup'
+import { lookup, interpolate } from '../../src/i18n/lookup'
 import type { NestedDict } from '../../src/i18n/lookup'
 
 export type Lang = 'en' | 'zh-CN'
@@ -21,8 +21,9 @@ export function resolveLang(pref: LangPref, systemLocale: string): Lang {
   return systemLocale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en'
 }
 
-export function t(key: string): string {
+export function t(key: string, vars?: Record<string, string | number>): string {
   const dict = (currentLang === 'zh-CN' ? zhCN : en) as unknown as NestedDict
   const enDict = en as unknown as NestedDict
-  return lookup(dict, key) ?? lookup(enDict, key) ?? key
+  const v = lookup(dict, key) ?? lookup(enDict, key) ?? key
+  return interpolate(v, vars)
 }
