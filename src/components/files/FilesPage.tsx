@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DirEntry } from '../../types'
+import type { DirEntry, CustomCommand } from '../../types'
 import { useTranslation } from '../../i18n/index'
 import { useFilesStore } from '../../stores/filesStore'
 import { useToast } from '../../stores/toastStore'
@@ -41,6 +41,20 @@ export default function FilesPage() {
   const clearSelection = useFilesStore((s) => s.clearSelection)
   const selectionAnchor = useFilesStore((s) => s.selectionAnchor)
   const history = useFilesStore((s) => s.history)
+  const [customCommands, setCustomCommands] = useState<CustomCommand[]>([])
+  useEffect(() => {
+    let mounted = true
+    window.api.getSettings().then((s) => { if (mounted) setCustomCommands(s.customCommands ?? []) })
+    return () => { mounted = false }
+  }, [])
+  // Re-load on focus to pick up edits made in the Settings page in the same session.
+  useEffect(() => {
+    const handler = () => {
+      window.api.getSettings().then((s) => setCustomCommands(s.customCommands ?? []))
+    }
+    window.addEventListener('focus', handler)
+    return () => window.removeEventListener('focus', handler)
+  }, [])
   const [menu, setMenu] = useState<MenuState>(null)
   const [renamingPath, setRenamingPath] = useState<string | null>(null)
 
@@ -222,7 +236,7 @@ export default function FilesPage() {
   const rowMenuItems = (entry: DirEntry): MenuItem[] => {
     const targets = targetsForRowMenu(entry)
     const isMulti = targets.length > 1
-    return [
+    const baseItems: MenuItem[] = [
       { label: t('files.contextMenu.open'), disabled: isMulti, onClick: async () => {
         const r = await window.api.fsOpen(entry.path)
         if (!r.ok) toast.error(r.message)
@@ -261,6 +275,22 @@ export default function FilesPage() {
           toast.success(t('files.toast.addedShortcut'))
         },
       },
+    ]
+
+    if (customCommands.length === 0) return baseItems
+
+    const customItems: MenuItem[] = customCommands.map((c) => ({
+      label: c.label,
+      onClick: async () => {
+        const r = await window.api.runCommand(c.id, targets)
+        if (!r.ok) toast.error(r.message)
+      },
+    }))
+
+    return [
+      ...baseItems,
+      { label: '', separator: true, onClick: () => {} },
+      ...customItems,
     ]
   }
 
