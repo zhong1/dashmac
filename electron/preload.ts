@@ -31,7 +31,7 @@ const api: DashMacAPI = {
   queryProcesses: () => ipcRenderer.invoke('query:processes'),
   queryDiskScan: (path) => ipcRenderer.invoke('query:disk-scan', path),
   queryConnections: () => ipcRenderer.invoke('query:connections'),
-  queryAppTraffic: (range) => ipcRenderer.invoke('query:app-traffic', range),
+  queryAppTraffic: (range: 'today' | '7d' | '30d') => ipcRenderer.invoke('query:app-traffic', range),
   listDirectory: (p: string) => ipcRenderer.invoke('fs:list', p),
   fsCreateFolder: (parent: string, name: string) => ipcRenderer.invoke('fs:create-folder', parent, name),
   fsCreateFile: (parent: string, name: string) => ipcRenderer.invoke('fs:create-file', parent, name),
@@ -48,6 +48,15 @@ const api: DashMacAPI = {
     ipcRenderer.invoke('action:kill-process', pid, name, signal),
   getSettings: () => ipcRenderer.invoke('get:settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save:settings', settings),
+  queryAppTrafficCurrent: () => ipcRenderer.invoke('query:app-traffic-current'),
+  queryCumulativeTraffic: (range: 'today' | '7d' | '30d') =>
+    ipcRenderer.invoke('query:cumulative-traffic', range),
+  dnsReverse: (ips: string[]) => ipcRenderer.invoke('query:dns-reverse', ips),
+  onAppTraffic: (callback: (snapshot: import('../src/types').AppTrafficSnapshot[]) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, snapshot: any) => callback(snapshot)
+    ipcRenderer.on('realtime:app-traffic', listener)
+    return () => ipcRenderer.removeListener('realtime:app-traffic', listener)
+  },
 }
 
 contextBridge.exposeInMainWorld('api', api)
