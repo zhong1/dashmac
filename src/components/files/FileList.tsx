@@ -4,6 +4,7 @@ import { useFilesStore, type SortColumn } from '../../stores/filesStore'
 import { formatRelativeTime } from '../../i18n/time'
 import type { DirEntry } from '../../types'
 import RenameInline from './RenameInline'
+import SortHeader from '../common/SortHeader'
 
 const EXT_ICON: Record<string, string> = {
   '.zip': '🗜️', '.tar': '🗜️', '.gz': '🗜️', '.bz2': '🗜️', '.7z': '🗜️',
@@ -111,10 +112,10 @@ export default function FileList({
       <table className="w-full text-xs font-mono">
         <thead className="sticky top-0 bg-bg-secondary border-b border-border-primary">
           <tr className="text-text-muted">
-            <SortHeader col="name" current={sort} onClick={setSort} label={t('files.list.columns.name')} />
-            <SortHeader col="size" current={sort} onClick={setSort} label={t('files.list.columns.size')} align="right" />
-            <SortHeader col="modified" current={sort} onClick={setSort} label={t('files.list.columns.modified')} />
-            <SortHeader col="type" current={sort} onClick={setSort} label={t('files.list.columns.type')} />
+            <SortHeader col="name" sort={sort} onClick={setSort} label={t('files.list.columns.name')} />
+            <SortHeader col="size" sort={sort} onClick={setSort} label={t('files.list.columns.size')} align="right" />
+            <SortHeader col="modified" sort={sort} onClick={setSort} label={t('files.list.columns.modified')} />
+            <SortHeader col="type" sort={sort} onClick={setSort} label={t('files.list.columns.type')} />
           </tr>
         </thead>
         <tbody>
@@ -159,16 +160,5 @@ export default function FileList({
       </table>
       <div onClick={clearSelection} onContextMenu={onContextEmpty} className="h-full min-h-[80px]" />
     </div>
-  )
-}
-
-function SortHeader({
-  col, current, onClick, label, align = 'left',
-}: { col: SortColumn; current: { column: SortColumn; dir: 'asc' | 'desc' }; onClick: (c: SortColumn) => void; label: string; align?: 'left' | 'right' }) {
-  const indicator = current.column === col ? (current.dir === 'asc' ? ' ▲' : ' ▼') : ''
-  return (
-    <th className={`px-3 py-2 cursor-pointer select-none text-${align} font-medium`} onClick={() => onClick(col)}>
-      {label}{indicator}
-    </th>
   )
 }

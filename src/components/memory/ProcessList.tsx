@@ -3,6 +3,7 @@ import type { ProcessInfo } from '../../types'
 import { useTranslation } from '../../i18n/index'
 import { useToast } from '../../stores/toastStore'
 import ContextMenu, { type MenuItem } from '../files/ContextMenu'
+import SortHeader from '../common/SortHeader'
 
 type SortColumn = 'name' | 'pid' | 'memory' | 'cpu'
 type SortDir = 'asc' | 'desc'
@@ -173,26 +174,6 @@ export default function ProcessList() {
         />
       )}
     </div>
-  )
-}
-
-function SortHeader({
-  col, sort, onClick, label, align = 'left',
-}: {
-  col: SortColumn
-  sort: { column: SortColumn; dir: SortDir }
-  onClick: (c: SortColumn) => void
-  label: string
-  align?: 'left' | 'right'
-}) {
-  const indicator = sort.column === col ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : ''
-  return (
-    <th
-      onClick={() => onClick(col)}
-      className={`px-4 py-2 cursor-pointer select-none font-medium text-${align}`}
-    >
-      {label}{indicator}
-    </th>
   )
 }
 
