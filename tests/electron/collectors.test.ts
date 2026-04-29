@@ -113,19 +113,20 @@ describe('collectConnections', () => {
 describe('collectProcesses', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('returns top processes sorted by memory', async () => {
+  it('returns top processes sorted by memory (memRss is KB; collector converts to bytes)', async () => {
+    // memRss values are in KB (per systeminformation); collector multiplies by 1024 → bytes
     vi.mocked(si.processes).mockResolvedValue({
       all: 350, running: 5, blocked: 0, sleeping: 345, unknown: 0,
       list: [
-        { pid: 1, name: 'kernel_task', mem: 5.2, cpu: 1.0, memRss: 800e6 } as any,
-        { pid: 200, name: 'Chrome', mem: 12.1, cpu: 8.5, memRss: 1900e6 } as any,
-        { pid: 300, name: 'Finder', mem: 1.0, cpu: 0.2, memRss: 150e6 } as any,
+        { pid: 1, name: 'kernel_task', mem: 5.2, cpu: 1.0, memRss: 800_000 } as any,    // 800 MB
+        { pid: 200, name: 'Chrome', mem: 12.1, cpu: 8.5, memRss: 1_900_000 } as any,    // 1.9 GB
+        { pid: 300, name: 'Finder', mem: 1.0, cpu: 0.2, memRss: 150_000 } as any,       // 150 MB
       ],
     } as any)
 
     const procs = await collectProcesses()
     expect(procs[0].name).toBe('Chrome')
-    expect(procs[0].memoryUsage).toBe(1900e6)
+    expect(procs[0].memoryUsage).toBe(1_900_000 * 1024)
     expect(procs).toHaveLength(3)
   })
 })

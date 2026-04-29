@@ -7,7 +7,7 @@ export async function collectProcesses(): Promise<RawProcessData[]> {
     .map((p) => ({
       pid: p.pid,
       name: p.name,
-      memoryUsage: (p as any).memRss ?? 0,
+      memoryUsage: ((p as any).memRss ?? 0) * 1024,
       cpuUsage: p.cpu,
     }))
     .sort((a, b) => b.memoryUsage - a.memoryUsage)
