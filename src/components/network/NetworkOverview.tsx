@@ -26,6 +26,8 @@ export default function NetworkOverview() {
   const [txData, setTxData] = useState<{ time: number; value: number }[]>([])
   const [historyRange, setHistoryRange] = useState<HistoryRange>('1h')
   const { data: historyData, loading: historyLoading } = useHistoryQuery({ type: 'network', range: historyRange })
+  const [cumRange, setCumRange] = useState<'today' | '7d' | '30d'>('today')
+  const [cumData, setCumData] = useState<{ rxTotal: number; txTotal: number }>({ rxTotal: 0, txTotal: 0 })
 
   useEffect(() => {
     if (!networkSpeed) return
@@ -33,6 +35,10 @@ export default function NetworkOverview() {
     setRxData((prev) => [...prev, { time: now, value: networkSpeed.rxSpeed }].slice(-60))
     setTxData((prev) => [...prev, { time: now, value: networkSpeed.txSpeed }].slice(-60))
   }, [networkSpeed])
+
+  useEffect(() => {
+    window.api.queryCumulativeTraffic(cumRange).then(setCumData)
+  }, [cumRange])
 
   return (
     <div className="space-y-4">
@@ -51,6 +57,27 @@ export default function NetworkOverview() {
         <div className="bg-bg-secondary border border-border-primary rounded-lg p-3">
           <div className="text-xs text-text-muted uppercase tracking-wider mb-1">{t('network.upload')}</div>
           <div className="font-mono text-xl font-semibold text-status-green">{networkSpeed ? formatSpeed(networkSpeed.txSpeed) : '--'}</div>
+        </div>
+      </div>
+      <div className="bg-bg-secondary border border-border-primary rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-text-primary">{t('network.cumulative.title')}</h3>
+          <div className="flex gap-1">
+            {(['today', '7d', '30d'] as const).map((r) => (
+              <button key={r} onClick={() => setCumRange(r)}
+                className={`px-2 py-1 text-xs font-mono rounded ${cumRange === r ? 'bg-status-blue text-white' : 'text-text-muted hover:text-text-secondary'}`}>
+                {t(`network.cumulative.${r === '7d' ? 'week' : r === '30d' ? 'month' : 'today'}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-8 font-mono">
+          <div>
+            <span className="text-status-blue text-xl">↓ {formatBytes(cumData.rxTotal)}</span>
+          </div>
+          <div>
+            <span className="text-status-green text-xl">↑ {formatBytes(cumData.txTotal)}</span>
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
