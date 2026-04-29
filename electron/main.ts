@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Tray, nativeImage, Menu } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Tray, nativeImage, Menu, dialog } from 'electron'
 import path from 'path'
 import { getDatabase, closeDatabase } from './database/index'
 import { insertMemoryStats, insertDiskStats, insertNetworkStats, queryHistory, cleanupOldData } from './database/queries'
@@ -16,11 +16,15 @@ import {
   rename as fsRename, copyMany, moveMany,
 } from './services/fileSystem'
 import { zipPaths } from './services/zipService'
+import { killProcess } from './services/processControl'
 
 let mainWindow: BrowserWindow | null = null
 let trayWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let scheduler: Scheduler | null = null
+
+const PROTECTED_PROCESS_NAMES = new Set(['launchd', 'kernel_task', 'WindowServer'])
+let isKillDialogOpen = false
 
 function sendToAllWindows(channel: string, data: any): void {
   mainWindow?.webContents.send(channel, data)
@@ -203,6 +207,66 @@ function registerIpcHandlers(): void {
     const result = await shell.openPath(p)
     if (result === '') return { ok: true as const }
     return { ok: false as const, message: result }
+  })
+
+  ipcMain.handle('action:kill-process', async (_e, pid: number, name: string, signal: 'SIGTERM' | 'SIGKILL') => {
+    // Safety guards — checked before showing the dialog.
+    if (pid === process.pid) {
+      return { ok: false as const, message: t('processControl.cannotKillSelf') }
+    }
+    if (PROTECTED_PROCESS_NAMES.has(name)) {
+      return { ok: false as const, message: t('processControl.protected') }
+    }
+    if (isKillDialogOpen) {
+      return { ok: false as const, cancelled: true as const }
+    }
+
+    isKillDialogOpen = true
+    try {
+      const isForce = signal === 'SIGKILL'
+      const result = await dialog.showMessageBox(mainWindow!, {
+        type: 'warning',
+        buttons: [
+          t('common.cancel'),
+          isForce ? t('processControl.confirmForceButton') : t('processControl.confirmButton'),
+        ],
+        defaultId: 0,
+        cancelId: 0,
+        title: t('processControl.confirmTitle'),
+        message: isForce
+          ? t('processControl.confirmForceMessage', { name, pid })
+          : t('processControl.confirmTermMessage', { name, pid }),
+      })
+      if (result.response !== 1) {
+        return { ok: false as const, cancelled: true as const }
+      }
+
+      const killResult = killProcess(pid, signal)
+      if (killResult.ok) {
+        return { ok: true as const }
+      }
+
+      // Map errno to i18n message before returning.
+      let messageKey: string
+      const vars: Record<string, string | number> = {}
+      switch (killResult.errno) {
+        case 'EPERM':
+          messageKey = 'processControl.error.permission'
+          break
+        case 'ESRCH':
+          messageKey = 'processControl.error.notFound'
+          break
+        case 'EINVAL':
+          messageKey = 'processControl.error.invalidSignal'
+          break
+        default:
+          messageKey = 'processControl.error.generic'
+          vars.message = killResult.message
+      }
+      return { ok: false as const, message: t(messageKey, vars) }
+    } finally {
+      isKillDialogOpen = false
+    }
   })
 }
 
