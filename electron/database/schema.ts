@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS app_traffic (
     date TEXT NOT NULL,
     app_name TEXT NOT NULL,
     rx_total INTEGER NOT NULL,
-    tx_total INTEGER NOT NULL
+    tx_total INTEGER NOT NULL,
+    UNIQUE(date, app_name)
 );
 `
 
