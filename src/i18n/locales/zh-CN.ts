@@ -140,6 +140,7 @@ const zhCN: typeof en = {
       trash: '移到废纸篓',
       zip: '压缩为 ZIP',
       revealInFinder: '在 Finder 中显示',
+      addToShortcuts: '添加到快捷目录',
       newFolder: '新建文件夹',
       newFile: '新建文件',
       paste: '粘贴',
@@ -227,6 +228,12 @@ const zhCN: typeof en = {
     menu: {
       quit: '退出',
       forceQuit: '强制退出',
+    },
+  },
+  dashboard: {
+    shortcuts: {
+      title: '快捷目录',
+      empty: '暂无快捷目录。在文件页右键文件夹添加。',
     },
   },
 }

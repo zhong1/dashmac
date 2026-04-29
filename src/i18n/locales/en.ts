@@ -138,6 +138,7 @@ const en = {
       trash: 'Move to Trash',
       zip: 'Compress to ZIP',
       revealInFinder: 'Show in Finder',
+      addToShortcuts: 'Add to Shortcuts',
       newFolder: 'New Folder',
       newFile: 'New File',
       paste: 'Paste',
@@ -225,6 +226,12 @@ const en = {
     menu: {
       quit: 'Quit',
       forceQuit: 'Force Quit',
+    },
+  },
+  dashboard: {
+    shortcuts: {
+      title: 'Shortcuts',
+      empty: 'No shortcuts yet. Right-click a folder in Files to add one.',
     },
   },
 }
