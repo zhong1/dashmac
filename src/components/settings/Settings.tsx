@@ -6,6 +6,7 @@ const DEFAULTS: AppSettings = {
   realtimeInterval: 2000, historyInterval: 60000, retentionDays: 90,
   trayDisplayMetric: 'memory', launchAtLogin: false,
   language: 'auto', resolvedLanguage: 'en',
+  fileShortcuts: [], showHiddenFiles: false,
 }
 
 export default function Settings() {
