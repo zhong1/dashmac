@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, Tray, nativeImage, Menu, dialog } from 'electron'
 import path from 'path'
+import { randomUUID } from 'node:crypto'
 import { getDatabase, closeDatabase } from './database/index'
 import { insertMemoryStats, insertDiskStats, insertNetworkStats, queryHistory, cleanupOldData } from './database/queries'
 import { collectMemory } from './collectors/memory'
@@ -20,11 +21,14 @@ import {
 } from './services/fileSystem'
 import { zipPaths } from './services/zipService'
 import { killProcess } from './services/processControl'
+import { initShellPath } from './services/shellPath'
+import { CustomCommandRunner } from './services/customCommandRunner'
 
 let mainWindow: BrowserWindow | null = null
 let trayWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let scheduler: Scheduler | null = null
+const customCommandRunner = new CustomCommandRunner()
 
 const PROTECTED_PROCESS_NAMES = new Set(['launchd', 'kernel_task', 'WindowServer'])
 let isKillDialogOpen = false
@@ -288,6 +292,24 @@ function registerIpcHandlers(): void {
       isKillDialogOpen = false
     }
   })
+
+  ipcMain.handle('query:run-command', async (_e, commandId: string, paths: string[]) => {
+    if (!Array.isArray(paths) || paths.length === 0) {
+      return { ok: false as const, message: 'no paths' }
+    }
+    const settings = loadSettings()
+    const runId = randomUUID()
+    customCommandRunner
+      .run({ runId, commandId, paths }, settings, (event) => {
+        sendToAllWindows('cmd:progress', event)
+      })
+      .catch((err) => {
+        // Should not happen — runner internalizes its errors. Log and emit a synthetic finish.
+        console.error('[customCommandRunner] unexpected throw:', err)
+        sendToAllWindows('cmd:progress', { type: 'finish', runId, ok: 0, failed: paths.length })
+      })
+    return { ok: true as const, runId }
+  })
 }
 
 function createMainWindow(): void {
@@ -344,6 +366,7 @@ function startScheduler(): void {
 }
 
 app.whenReady().then(() => {
+  initShellPath().catch(() => { /* fallback already handled inside */ })
   const stored = loadSettings()
   const resolved = resolveLang(stored.language, app.getLocale())
   setLang(resolved)
@@ -371,5 +394,6 @@ app.on('activate', () => {
 app.on('before-quit', () => {
   scheduler?.stop()
   nettopCollector.stop()
+  customCommandRunner.disposeAll()
   closeDatabase()
 })

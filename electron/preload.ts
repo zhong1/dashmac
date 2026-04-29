@@ -57,6 +57,13 @@ const api: DashMacAPI = {
     ipcRenderer.on('realtime:app-traffic', listener)
     return () => ipcRenderer.removeListener('realtime:app-traffic', listener)
   },
+  runCommand: (commandId: string, paths: string[]) =>
+    ipcRenderer.invoke('query:run-command', commandId, paths),
+  onCommandProgress: (callback: (event: import('../src/types').CustomCommandProgressEvent) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, ev: any) => callback(ev)
+    ipcRenderer.on('cmd:progress', listener)
+    return () => ipcRenderer.removeListener('cmd:progress', listener)
+  },
 }
 
 contextBridge.exposeInMainWorld('api', api)

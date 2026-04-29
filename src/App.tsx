@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import { useRealtimeData } from './hooks/useRealtimeData'
@@ -10,6 +10,8 @@ import FilesPage from './components/files/FilesPage'
 import Settings from './components/settings/Settings'
 import TrayPanel from './components/tray/TrayPanel'
 import ToastRoot from './components/common/Toast'
+import CommandRunStatus from './components/common/CommandRunStatus'
+import { useCommandRunStore } from './stores/commandRunStore'
 
 type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'settings'
 
@@ -34,6 +36,19 @@ function MainApp() {
   const { t } = useTranslation()
   useRealtimeData()
 
+  useEffect(() => {
+    const unsubscribe = window.api.onCommandProgress((e) => {
+      const store = useCommandRunStore.getState()
+      switch (e.type) {
+        case 'start':     store.start(e); break
+        case 'advance':   store.advance(e); break
+        case 'fileError': store.fileError(e); break
+        case 'finish':    store.finish(e); break
+      }
+    })
+    return unsubscribe
+  }, [])
+
   return (
     <div className="h-screen flex bg-bg-primary text-text-primary">
       <Sidebar activePage={page} onNavigate={setPage} />
@@ -43,6 +58,7 @@ function MainApp() {
           <PageContent page={page} onNavigate={setPage} />
         </main>
       </div>
+      <CommandRunStatus />
     </div>
   )
 }

@@ -75,4 +75,30 @@ describe('settingsStore', () => {
     saveSettings(next, f)
     expect(loadSettings(f)).toEqual(next)
   })
+
+  test('DEFAULTS includes empty customCommands array', () => {
+    expect(DEFAULTS.customCommands).toEqual([])
+  })
+
+  test('round-trip preserves customCommands', () => {
+    const f = tmpFile()
+    created.push(f)
+    const next = {
+      ...DEFAULTS,
+      customCommands: [
+        { id: 'a1', label: 'bup 上传', command: 'bup' },
+        { id: 'b2', label: 'git status', command: 'git status' },
+      ],
+    }
+    saveSettings(next, f)
+    expect(loadSettings(f)).toEqual(next)
+  })
+
+  test('migration: existing settings.json without customCommands gets empty array', () => {
+    const f = tmpFile()
+    created.push(f)
+    fs.writeFileSync(f, JSON.stringify({ retentionDays: 30 }), 'utf8')
+    const result = loadSettings(f)
+    expect(result.customCommands).toEqual([])
+  })
 })

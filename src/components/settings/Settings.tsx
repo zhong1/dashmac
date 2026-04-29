@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { AppSettings } from '../../types'
+import type { AppSettings, CustomCommand } from '../../types'
 import { useTranslation } from '../../i18n/index'
 
 const DEFAULTS: AppSettings = {
@@ -7,6 +7,7 @@ const DEFAULTS: AppSettings = {
   trayDisplayMetric: 'memory', launchAtLogin: false,
   language: 'auto', resolvedLanguage: 'en',
   fileShortcuts: [], showHiddenFiles: false,
+  customCommands: [],
 }
 
 export default function Settings() {
@@ -101,6 +102,18 @@ export default function Settings() {
         </Field>
       </Section>
 
+      <Section title={t('settings.customCommands.title')}>
+        <p className="text-xs text-text-secondary mb-3">{t('settings.customCommands.description')}</p>
+        <CustomCommandsEditor
+          commands={settings.customCommands}
+          onChange={async (next) => {
+            const updated = { ...settings, customCommands: next }
+            setSettings(updated)
+            await window.api.saveSettings(updated)
+          }}
+        />
+      </Section>
+
       <Section title={t('settings.sections.export')}>
         <div className="flex gap-2">
           <button onClick={() => handleExport('csv')}
@@ -135,6 +148,160 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div className="flex items-center justify-between">
       <span className="text-xs text-text-secondary">{label}</span>
       {children}
+    </div>
+  )
+}
+
+function CustomCommandsEditor({
+  commands,
+  onChange,
+}: {
+  commands: CustomCommand[]
+  onChange: (next: CustomCommand[]) => void
+}) {
+  const { t } = useTranslation()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+
+  const handleAdd = (label: string, command: string) => {
+    const id = (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+    onChange([...commands, { id, label, command }])
+    setAdding(false)
+  }
+  const handleEdit = (id: string, label: string, command: string) => {
+    onChange(commands.map((c) => (c.id === id ? { ...c, label, command } : c)))
+    setEditingId(null)
+  }
+  const handleDelete = (id: string) => {
+    onChange(commands.filter((c) => c.id !== id))
+    if (editingId === id) setEditingId(null)
+  }
+
+  return (
+    <div className="space-y-2">
+      {commands.length === 0 && !adding && (
+        <div className="text-xs text-text-secondary italic">{t('settings.customCommands.empty')}</div>
+      )}
+      {commands.map((c) =>
+        editingId === c.id ? (
+          <CommandForm
+            key={c.id}
+            initial={c}
+            onSave={(label, command) => handleEdit(c.id, label, command)}
+            onCancel={() => setEditingId(null)}
+          />
+        ) : (
+          <div key={c.id} className="flex items-center justify-between bg-bg-primary border border-border-primary rounded px-3 py-2">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm text-text-primary truncate">{c.label}</span>
+              <span className="text-xs font-mono text-text-secondary truncate">{c.command}</span>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setEditingId(c.id)}
+                className="text-xs px-2 py-1 border border-border-primary rounded hover:bg-bg-tertiary text-text-primary"
+              >{t('settings.customCommands.edit')}</button>
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="text-xs px-2 py-1 border border-border-primary rounded hover:bg-bg-tertiary text-status-red"
+              >{t('settings.customCommands.delete')}</button>
+            </div>
+          </div>
+        ),
+      )}
+      {adding ? (
+        <CommandForm onSave={handleAdd} onCancel={() => setAdding(false)} />
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          className="text-xs px-3 py-1.5 border border-border-primary rounded hover:bg-bg-tertiary text-text-primary"
+        >+ {t('settings.customCommands.add')}</button>
+      )}
+    </div>
+  )
+}
+
+function CommandForm({
+  initial,
+  onSave,
+  onCancel,
+}: {
+  initial?: CustomCommand
+  onSave: (label: string, command: string) => void
+  onCancel: () => void
+}) {
+  const { t } = useTranslation()
+  const [label, setLabel] = useState(initial?.label ?? '')
+  const [command, setCommand] = useState(initial?.command ?? '')
+
+  const labelTrim = label.trim()
+  const cmdTrim = command.trim()
+  const empty = labelTrim.length === 0 || cmdTrim.length === 0
+
+  let parseError: string | null = null
+  if (!empty) {
+    try {
+      // Renderer-side mirror of the unclosed-quote check from electron/services/shlex.ts.
+      // We can't import from electron/services in renderer code, so duplicate the
+      // critical "unclosed quote" detection inline.
+      let inDouble = false, inSingle = false
+      for (let i = 0; i < command.length; i++) {
+        const ch = command[i]
+        if (inDouble) {
+          if (ch === '\\' && i + 1 < command.length) { i++; continue }
+          if (ch === '"') inDouble = false
+        } else if (inSingle) {
+          if (ch === "'") inSingle = false
+        } else {
+          if (ch === '"') inDouble = true
+          else if (ch === "'") inSingle = true
+        }
+      }
+      if (inDouble || inSingle) throw new Error('unclosed quote')
+    } catch {
+      parseError = t('settings.customCommands.errorParse')
+    }
+  }
+
+  const disabled = empty || parseError !== null
+
+  return (
+    <div className="bg-bg-primary border border-border-primary rounded p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-text-secondary w-16">{t('settings.customCommands.label')}</span>
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder={t('settings.customCommands.labelPlaceholder')}
+          className="flex-1 bg-bg-secondary border border-border-primary rounded px-2 py-1 text-sm text-text-primary"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-text-secondary w-16">{t('settings.customCommands.command')}</span>
+        <input
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          placeholder={t('settings.customCommands.commandPlaceholder')}
+          className="flex-1 bg-bg-secondary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary"
+        />
+      </div>
+      {empty && (
+        <div className="text-xs text-status-red">{t('settings.customCommands.errorEmpty')}</div>
+      )}
+      {parseError && (
+        <div className="text-xs text-status-red">{parseError}</div>
+      )}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onSave(labelTrim, cmdTrim)}
+          disabled={disabled}
+          className="text-xs px-3 py-1.5 bg-status-blue text-white rounded disabled:opacity-50"
+        >{t('settings.customCommands.save')}</button>
+        <button
+          onClick={onCancel}
+          className="text-xs px-3 py-1.5 border border-border-primary rounded hover:bg-bg-tertiary text-text-primary"
+        >{t('settings.customCommands.cancel')}</button>
+      </div>
     </div>
   )
 }
