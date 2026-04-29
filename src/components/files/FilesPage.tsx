@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useFilesStore } from '../../stores/filesStore'
 import FileSidebar from './FileSidebar'
 import PathBar from './PathBar'
+import FileList from './FileList'
 
 export default function FilesPage() {
   const navigate = useFilesStore((s) => s.navigate)
@@ -13,9 +14,10 @@ export default function FilesPage() {
       <FileSidebar />
       <div className="flex-1 flex flex-col">
         <PathBar />
-        <div className="flex-1 text-text-muted font-mono text-sm p-4">
-          (FileList in next task)
-        </div>
+        <FileList
+          onContextRow={(e, _entry) => { e.preventDefault() /* Task 18 */ }}
+          onContextEmpty={(e) => { e.preventDefault() /* Task 18 */ }}
+        />
       </div>
     </div>
   )
