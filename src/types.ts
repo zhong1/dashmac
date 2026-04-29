@@ -142,6 +142,16 @@ export interface DashMacAPI {
   >
   onDirChanged: (callback: (path: string) => void) => () => void
   onLangChanged: (callback: (lang: 'en' | 'zh-CN') => void) => () => void
+  // Process management
+  killProcess: (
+    pid: number,
+    name: string,
+    signal: 'SIGTERM' | 'SIGKILL',
+  ) => Promise<
+    | { ok: true }
+    | { ok: false; cancelled: true }
+    | { ok: false; message: string }
+  >
 }
 
 export interface AppSettings {
