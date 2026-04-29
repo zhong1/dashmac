@@ -163,13 +163,13 @@ function CustomCommandsEditor({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
 
-  const handleAdd = (label: string, command: string, pathMode: 'absolute' | 'basename') => {
+  const handleAdd = (label: string, command: string, pathMode: 'absolute' | 'basename', useShell: boolean) => {
     const id = (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random()}`
-    onChange([...commands, { id, label, command, pathMode }])
+    onChange([...commands, { id, label, command, pathMode, useShell }])
     setAdding(false)
   }
-  const handleEdit = (id: string, label: string, command: string, pathMode: 'absolute' | 'basename') => {
-    onChange(commands.map((c) => (c.id === id ? { ...c, label, command, pathMode } : c)))
+  const handleEdit = (id: string, label: string, command: string, pathMode: 'absolute' | 'basename', useShell: boolean) => {
+    onChange(commands.map((c) => (c.id === id ? { ...c, label, command, pathMode, useShell } : c)))
     setEditingId(null)
   }
   const handleDelete = (id: string) => {
@@ -187,7 +187,7 @@ function CustomCommandsEditor({
           <CommandForm
             key={c.id}
             initial={c}
-            onSave={(label, command, pathMode) => handleEdit(c.id, label, command, pathMode)}
+            onSave={(label, command, pathMode, useShell) => handleEdit(c.id, label, command, pathMode, useShell)}
             onCancel={() => setEditingId(null)}
           />
         ) : (
@@ -227,20 +227,22 @@ function CommandForm({
   onCancel,
 }: {
   initial?: CustomCommand
-  onSave: (label: string, command: string, pathMode: 'absolute' | 'basename') => void
+  onSave: (label: string, command: string, pathMode: 'absolute' | 'basename', useShell: boolean) => void
   onCancel: () => void
 }) {
   const { t } = useTranslation()
   const [label, setLabel] = useState(initial?.label ?? '')
   const [command, setCommand] = useState(initial?.command ?? '')
   const [pathMode, setPathMode] = useState<'absolute' | 'basename'>(initial?.pathMode ?? 'absolute')
+  const [useShell, setUseShell] = useState<boolean>(initial?.useShell ?? false)
 
   const labelTrim = label.trim()
   const cmdTrim = command.trim()
   const empty = labelTrim.length === 0 || cmdTrim.length === 0
 
+  // Skip the unclosed-quote check when useShell is on — the shell parses it.
   let parseError: string | null = null
-  if (!empty) {
+  if (!empty && !useShell) {
     try {
       // Renderer-side mirror of the unclosed-quote check from electron/services/shlex.ts.
       // We can't import from electron/services in renderer code, so duplicate the
@@ -297,6 +299,15 @@ function CommandForm({
           <option value="basename">{t('settings.customCommands.pathModeBasename')}</option>
         </select>
       </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={useShell}
+          onChange={(e) => setUseShell(e.target.checked)}
+          className="accent-status-blue"
+        />
+        <span className="text-xs text-text-secondary">{t('settings.customCommands.useShell')}</span>
+      </label>
       {empty && (
         <div className="text-xs text-status-red">{t('settings.customCommands.errorEmpty')}</div>
       )}
@@ -305,7 +316,7 @@ function CommandForm({
       )}
       <div className="flex gap-2">
         <button
-          onClick={() => onSave(labelTrim, cmdTrim, pathMode)}
+          onClick={() => onSave(labelTrim, cmdTrim, pathMode, useShell)}
           disabled={disabled}
           className="text-xs px-3 py-1.5 bg-status-blue text-white rounded disabled:opacity-50"
         >{t('settings.customCommands.save')}</button>

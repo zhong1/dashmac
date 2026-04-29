@@ -192,6 +192,7 @@ export interface CustomCommand {
   label: string
   command: string
   pathMode?: 'absolute' | 'basename'   // default 'absolute'
+  useShell?: boolean                   // default false; set true for ~/.zshrc functions/aliases
 }
 
 export type CustomCommandProgressEvent =

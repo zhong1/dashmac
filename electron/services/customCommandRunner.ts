@@ -30,28 +30,48 @@ export class CustomCommandRunner {
       return
     }
 
-    let argv: string[]
-    try {
-      argv = parseShellArgs(cmd.command)
-    } catch (err: any) {
-      emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
-      for (const p of req.paths) {
-        emit({ type: 'fileError', runId: req.runId, path: p, message: `parseError:${err?.message ?? 'parse'}`, stderr: '' })
-      }
-      emit({ type: 'finish', runId: req.runId, ok: 0, failed: req.paths.length })
-      return
-    }
+    const useShell = cmd.useShell ?? false
+    let bin: string
+    let staticArgs: string[] = []
 
-    if (argv.length === 0) {
-      emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
-      for (const p of req.paths) {
-        emit({ type: 'fileError', runId: req.runId, path: p, message: 'parseError:empty', stderr: '' })
+    if (useShell) {
+      // Shell mode: pass the user's command verbatim to their login shell so
+      // functions/aliases defined in ~/.zshrc are available. The file path is
+      // still passed as a separate argv entry via "$@", so file names with
+      // spaces/quotes/metacharacters are NOT shell-interpolated.
+      if (cmd.command.trim().length === 0) {
+        emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
+        for (const p of req.paths) {
+          emit({ type: 'fileError', runId: req.runId, path: p, message: 'parseError:empty', stderr: '' })
+        }
+        emit({ type: 'finish', runId: req.runId, ok: 0, failed: req.paths.length })
+        return
       }
-      emit({ type: 'finish', runId: req.runId, ok: 0, failed: req.paths.length })
-      return
-    }
+      bin = process.env.SHELL || '/bin/zsh'
+    } else {
+      let argv: string[]
+      try {
+        argv = parseShellArgs(cmd.command)
+      } catch (err: any) {
+        emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
+        for (const p of req.paths) {
+          emit({ type: 'fileError', runId: req.runId, path: p, message: `parseError:${err?.message ?? 'parse'}`, stderr: '' })
+        }
+        emit({ type: 'finish', runId: req.runId, ok: 0, failed: req.paths.length })
+        return
+      }
 
-    const [bin, ...staticArgs] = argv
+      if (argv.length === 0) {
+        emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
+        for (const p of req.paths) {
+          emit({ type: 'fileError', runId: req.runId, path: p, message: 'parseError:empty', stderr: '' })
+        }
+        emit({ type: 'finish', runId: req.runId, ok: 0, failed: req.paths.length })
+        return
+      }
+
+      ;[bin, ...staticArgs] = argv
+    }
 
     emit({ type: 'start', runId: req.runId, commandLabel: cmd.label, total: req.paths.length })
 
@@ -63,7 +83,10 @@ export class CustomCommandRunner {
     for (let i = 0; i < req.paths.length; i++) {
       const filePath = req.paths[i]
       const argPath = pathMode === 'basename' ? path.basename(filePath) : filePath
-      const result = await this.runOne(bin, staticArgs, filePath, argPath)
+      const argv = useShell
+        ? ['-ilc', `${cmd.command} "$@"`, 'dashmac', argPath]
+        : [...staticArgs, argPath]
+      const result = await this.runOne(bin, argv, filePath)
 
       if (result.ok) {
         okCount++
@@ -86,13 +109,11 @@ export class CustomCommandRunner {
 
   private runOne(
     bin: string,
-    staticArgs: string[],
+    argv: string[],
     filePath: string,
-    argPath: string = filePath,
   ): Promise<{ ok: true } | { ok: false; message: string; stderr: string }> {
     return new Promise((resolve) => {
       const cwd = path.dirname(filePath)
-      const argv = [...staticArgs, argPath]
       let child: ChildProcess
       try {
         child = spawn(bin, argv, {

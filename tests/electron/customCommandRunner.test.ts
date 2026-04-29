@@ -113,6 +113,68 @@ describe('CustomCommandRunner — single success', () => {
     )
   })
 
+  test('useShell:true spawns $SHELL -ilc with command + path via "$@"', async () => {
+    const originalShell = process.env.SHELL
+    process.env.SHELL = '/bin/zsh'
+    try {
+      const child = makeFakeChild()
+      vi.mocked(spawn).mockReturnValue(child)
+
+      const runner = new CustomCommandRunner()
+      const settings = makeSettings([
+        { id: 'c1', label: 'bup', command: 'bup', useShell: true },
+      ])
+
+      const promise = runner.run(
+        { runId: 'r1', commandId: 'c1', paths: ['/Users/me/Downloads/a.txt'] },
+        settings,
+        () => {},
+      )
+      await Promise.resolve(); await Promise.resolve()
+      child.emit('close', 0)
+      await promise
+
+      expect(spawn).toHaveBeenCalledWith(
+        '/bin/zsh',
+        ['-ilc', 'bup "$@"', 'dashmac', '/Users/me/Downloads/a.txt'],
+        expect.objectContaining({ cwd: '/Users/me/Downloads', shell: false }),
+      )
+    } finally {
+      process.env.SHELL = originalShell
+    }
+  })
+
+  test('useShell:true with pathMode:basename passes only basename via "$@"', async () => {
+    const originalShell = process.env.SHELL
+    process.env.SHELL = '/bin/zsh'
+    try {
+      const child = makeFakeChild()
+      vi.mocked(spawn).mockReturnValue(child)
+
+      const runner = new CustomCommandRunner()
+      const settings = makeSettings([
+        { id: 'c1', label: 'bup', command: 'bup', useShell: true, pathMode: 'basename' },
+      ])
+
+      const promise = runner.run(
+        { runId: 'r1', commandId: 'c1', paths: ['/Users/me/Downloads/a.txt'] },
+        settings,
+        () => {},
+      )
+      await Promise.resolve(); await Promise.resolve()
+      child.emit('close', 0)
+      await promise
+
+      expect(spawn).toHaveBeenCalledWith(
+        '/bin/zsh',
+        ['-ilc', 'bup "$@"', 'dashmac', 'a.txt'],
+        expect.any(Object),
+      )
+    } finally {
+      process.env.SHELL = originalShell
+    }
+  })
+
   test('missing pathMode defaults to absolute (backwards compat)', async () => {
     const child = makeFakeChild()
     vi.mocked(spawn).mockReturnValue(child)

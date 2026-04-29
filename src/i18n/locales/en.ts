@@ -274,6 +274,7 @@ const en = {
       pathMode: 'Path format',
       pathModeAbsolute: 'Absolute path',
       pathModeBasename: 'Filename only',
+      useShell: 'Run via shell (for ~/.zshrc functions/aliases)',
     },
   },
   processControl: {

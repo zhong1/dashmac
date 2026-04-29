@@ -276,6 +276,7 @@ const zhCN: typeof en = {
       pathMode: '路径形式',
       pathModeAbsolute: '绝对路径',
       pathModeBasename: '文件名',
+      useShell: '通过 shell 执行（用于 ~/.zshrc 里的函数/alias）',
     },
   },
   processControl: {
