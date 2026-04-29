@@ -47,6 +47,10 @@ const en = {
       pid: 'PID',
       memory: 'Memory',
       cpu: 'CPU %',
+      search: {
+        placeholder: 'Search processes...',
+        clear: 'Clear search',
+      },
     },
   },
   disk: {

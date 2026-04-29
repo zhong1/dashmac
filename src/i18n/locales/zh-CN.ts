@@ -49,6 +49,10 @@ const zhCN: typeof en = {
       pid: 'PID',
       memory: '内存',
       cpu: 'CPU %',
+      search: {
+        placeholder: '搜索进程名...',
+        clear: '清空搜索',
+      },
     },
   },
   disk: {
