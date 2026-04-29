@@ -61,6 +61,17 @@ export interface FileEntry {
   children?: FileEntry[]
 }
 
+// Flat file-system entry returned by listDirectory. Distinct from FileEntry
+// (which is recursive with `children` and used by the Treemap analytics view).
+export interface DirEntry {
+  name: string
+  path: string
+  isDirectory: boolean
+  size: number          // 0 for directories
+  modifiedAt: number    // ms since epoch
+  ext: string           // lowercase, includes dot; '' for directories or no ext
+}
+
 export interface AppTraffic {
   appName: string
   rxTotal: number
@@ -92,6 +103,44 @@ export interface DashMacAPI {
   openMainWindow: () => void
   getSettings: () => Promise<AppSettings>
   saveSettings: (settings: AppSettings) => Promise<void>
+  // File browser
+  listDirectory: (path: string) => Promise<
+    | { ok: true; entries: DirEntry[] }
+    | { ok: false; errno: string; message: string }
+  >
+  fsCreateFolder: (parent: string, name: string) => Promise<
+    | { ok: true; path: string }
+    | { ok: false; message: string }
+  >
+  fsCreateFile: (parent: string, name: string) => Promise<
+    | { ok: true; path: string }
+    | { ok: false; message: string }
+  >
+  fsRename: (oldPath: string, newName: string) => Promise<
+    | { ok: true; path: string }
+    | { ok: false; message: string }
+  >
+  fsTrash: (paths: string[]) => Promise<
+    | { ok: true }
+    | { ok: false; failed: string[]; message: string }
+  >
+  fsCopy: (paths: string[], destDir: string) => Promise<
+    | { ok: true }
+    | { ok: false; failed: string[]; message: string }
+  >
+  fsMove: (paths: string[], destDir: string) => Promise<
+    | { ok: true }
+    | { ok: false; failed: string[]; message: string }
+  >
+  fsZip: (paths: string[], destDir: string) => Promise<
+    | { ok: true; path: string }
+    | { ok: false; message: string }
+  >
+  fsOpen: (path: string) => Promise<
+    | { ok: true }
+    | { ok: false; message: string }
+  >
+  onDirChanged: (callback: (path: string) => void) => () => void
   onLangChanged: (callback: (lang: 'en' | 'zh-CN') => void) => () => void
 }
 
@@ -103,6 +152,8 @@ export interface AppSettings {
   launchAtLogin: boolean
   language: 'auto' | 'en' | 'zh-CN'
   resolvedLanguage: 'en' | 'zh-CN'
+  fileShortcuts: string[]      // NEW; absolute paths; default []
+  showHiddenFiles: boolean     // NEW; default false
 }
 
 declare global {
