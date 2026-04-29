@@ -48,11 +48,25 @@ export default function FilesPage() {
     const filtered = showHidden ? entries : entries.filter((e) => !e.name.startsWith('.'))
     const sign = sort.dir === 'asc' ? 1 : -1
     return [...filtered].sort((a, b) => {
-      if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
-      if (sort.column === 'name') return sign * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-      if (sort.column === 'size') return sign * (a.size - b.size)
-      if (sort.column === 'modified') return sign * (a.modifiedAt - b.modifiedAt)
-      if (sort.column === 'type') return sign * a.ext.localeCompare(b.ext) || a.name.localeCompare(b.name)
+      // Directories-first only when sorting by name (alphabetical convention).
+      // For size/modified/type, sort purely by the column so e.g. the newest
+      // entry actually appears first regardless of whether it's a folder.
+      if (sort.column === 'name') {
+        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
+        return sign * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      }
+      if (sort.column === 'size') {
+        const cmp = a.size - b.size
+        return cmp !== 0 ? sign * cmp : a.name.localeCompare(b.name)
+      }
+      if (sort.column === 'modified') {
+        const cmp = a.modifiedAt - b.modifiedAt
+        return cmp !== 0 ? sign * cmp : a.name.localeCompare(b.name)
+      }
+      if (sort.column === 'type') {
+        const cmp = a.ext.localeCompare(b.ext)
+        return cmp !== 0 ? sign * cmp : a.name.localeCompare(b.name)
+      }
       return 0
     })
   }, [entries, showHidden, sort])
