@@ -3,6 +3,7 @@ import { useTranslation } from '../../i18n/index'
 import { useFilesStore, type SortColumn } from '../../stores/filesStore'
 import { formatRelativeTime } from '../../i18n/time'
 import type { DirEntry } from '../../types'
+import RenameInline from './RenameInline'
 
 const EXT_ICON: Record<string, string> = {
   '.zip': '🗜️', '.tar': '🗜️', '.gz': '🗜️', '.bz2': '🗜️', '.7z': '🗜️',
@@ -34,9 +35,15 @@ function formatBytes(bytes: number): string {
 interface FileListProps {
   onContextRow: (e: React.MouseEvent, entry: DirEntry) => void
   onContextEmpty: (e: React.MouseEvent) => void
+  renamingPath: string | null
+  onRenameSubmit: (entry: DirEntry, newName: string) => Promise<{ ok: boolean; message?: string }>
+  onRenameCancel: () => void
 }
 
-export default function FileList({ onContextRow, onContextEmpty }: FileListProps) {
+export default function FileList({
+  onContextRow, onContextEmpty,
+  renamingPath, onRenameSubmit, onRenameCancel,
+}: FileListProps) {
   const { t, lang } = useTranslation()
   const entries = useFilesStore((s) => s.entries)
   const showHidden = useFilesStore((s) => s.showHidden)
@@ -118,7 +125,16 @@ export default function FileList({ onContextRow, onContextEmpty }: FileListProps
               }`}
             >
               <td className="px-3 py-1.5 truncate max-w-[300px]">
-                {e.isDirectory ? '📁' : EXT_ICON[e.ext] ?? '📄'} {e.name}
+                {e.isDirectory ? '📁' : EXT_ICON[e.ext] ?? '📄'}{' '}
+                {renamingPath === e.path ? (
+                  <RenameInline
+                    initialName={e.name}
+                    onSubmit={(newName) => onRenameSubmit(e, newName)}
+                    onCancel={onRenameCancel}
+                  />
+                ) : (
+                  e.name
+                )}
               </td>
               <td className="px-3 py-1.5 text-right">{e.isDirectory ? '--' : formatBytes(e.size)}</td>
               <td className="px-3 py-1.5">{formatRelativeTime(e.modifiedAt, lang)}</td>

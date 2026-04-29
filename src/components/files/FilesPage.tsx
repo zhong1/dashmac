@@ -70,6 +70,23 @@ export default function FilesPage() {
     ]
   }
 
+  const handleRenameSubmit = async (entry: DirEntry, newName: string) => {
+    if (newName.length === 0 || newName.includes('/')) {
+      return { ok: false, message: t('files.error.invalidName') }
+    }
+    const r = await window.api.fsRename(entry.path, newName)
+    if (r.ok) {
+      setRenamingPath(null)
+      return { ok: true }
+    } else {
+      // Pattern-match on error message for collision detection
+      if (r.message.includes('EEXIST') || r.message.includes('exists')) {
+        return { ok: false, message: t('files.error.nameExists') }
+      }
+      return { ok: false, message: r.message }
+    }
+  }
+
   const emptyMenuItems = (): MenuItem[] => [
     { label: t('files.contextMenu.newFolder'), onClick: async () => {
       const name = await uniqueDefault(currentPath, t('files.defaults.untitledFolder'))
@@ -104,7 +121,13 @@ export default function FilesPage() {
       <FileSidebar />
       <div className="flex-1 flex flex-col">
         <PathBar />
-        <FileList onContextRow={openRowMenu} onContextEmpty={openEmptyMenu} />
+        <FileList
+          onContextRow={openRowMenu}
+          onContextEmpty={openEmptyMenu}
+          renamingPath={renamingPath}
+          onRenameSubmit={handleRenameSubmit}
+          onRenameCancel={() => setRenamingPath(null)}
+        />
       </div>
       {menu && (
         <ContextMenu
@@ -114,8 +137,6 @@ export default function FilesPage() {
           onClose={() => setMenu(null)}
         />
       )}
-      {/* Rename overlay handled in Task 19 */}
-      {renamingPath && null /* placeholder; Task 19 wires this */}
     </div>
   )
 }
