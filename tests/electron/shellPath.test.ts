@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'node:events'
 import { Readable } from 'node:stream'
 
@@ -18,45 +18,88 @@ function makeFakeChild(): any {
   return emitter
 }
 
+const ORIGINAL_PATH = process.env.PATH
+const ORIGINAL_SHELL = process.env.SHELL
+
 describe('shellPath', () => {
   beforeEach(() => {
     _resetForTest()
     vi.mocked(spawn).mockReset()
+    process.env.PATH = '/usr/bin:/bin'
+    process.env.SHELL = '/bin/zsh'
   })
 
-  test('getShellPath returns process.env.PATH before init', () => {
-    expect(getShellPath()).toBe(process.env.PATH ?? '')
+  afterEach(() => {
+    process.env.PATH = ORIGINAL_PATH
+    process.env.SHELL = ORIGINAL_SHELL
   })
 
-  test('initShellPath resolves with stdout from login shell', async () => {
+  test('getShellPath before init contains process.env.PATH segments', () => {
+    const path = getShellPath()
+    expect(path.split(':')).toEqual(expect.arrayContaining(['/usr/bin', '/bin']))
+  })
+
+  test('initShellPath resolves and merges shell PATH with process.env.PATH', async () => {
     const child = makeFakeChild()
     vi.mocked(spawn).mockReturnValue(child)
     const promise = initShellPath()
-    child.stdout.push('/usr/local/bin:/usr/bin:/bin\n')
+    child.stdout.push('/Users/me/.local/bin:/opt/homebrew/bin:/usr/bin\n')
     child.stdout.push(null)
     child.emit('close', 0)
     await promise
-    expect(getShellPath()).toBe('/usr/local/bin:/usr/bin:/bin')
-    expect(spawn).toHaveBeenCalledWith('bash', ['-lc', 'echo $PATH'], expect.any(Object))
+    const segs = getShellPath().split(':')
+    // Login-shell PATH segments come first, deduplicated.
+    expect(segs.indexOf('/Users/me/.local/bin')).toBe(0)
+    expect(segs).toContain('/opt/homebrew/bin')
+    expect(segs).toContain('/usr/bin')
+    expect(segs).toContain('/bin')
+    // No duplicate entries.
+    expect(new Set(segs).size).toBe(segs.length)
   })
 
-  test('falls back to process.env.PATH when spawn errors', async () => {
+  test('uses $SHELL with -ilc, not hardcoded bash', async () => {
+    process.env.SHELL = '/bin/zsh'
+    const child = makeFakeChild()
+    vi.mocked(spawn).mockReturnValue(child)
+    const promise = initShellPath()
+    child.stdout.push('/x\n')
+    child.stdout.push(null)
+    child.emit('close', 0)
+    await promise
+    expect(spawn).toHaveBeenCalledWith('/bin/zsh', ['-ilc', 'echo $PATH'], expect.any(Object))
+  })
+
+  test('falls back to /bin/zsh when $SHELL is unset', async () => {
+    delete process.env.SHELL
+    const child = makeFakeChild()
+    vi.mocked(spawn).mockReturnValue(child)
+    const promise = initShellPath()
+    child.stdout.push('/x\n')
+    child.stdout.push(null)
+    child.emit('close', 0)
+    await promise
+    expect(spawn).toHaveBeenCalledWith('/bin/zsh', ['-ilc', 'echo $PATH'], expect.any(Object))
+  })
+
+  test('falls back to process.env.PATH segments when spawn errors', async () => {
     const child = makeFakeChild()
     vi.mocked(spawn).mockReturnValue(child)
     const promise = initShellPath()
     child.emit('error', new Error('boom'))
     await promise
-    expect(getShellPath()).toBe(process.env.PATH ?? '')
+    const segs = getShellPath().split(':')
+    expect(segs).toEqual(expect.arrayContaining(['/usr/bin', '/bin']))
   })
 
-  test('falls back to process.env.PATH when child times out', async () => {
+  test('falls back when child times out', async () => {
     vi.useFakeTimers()
     const child = makeFakeChild()
     vi.mocked(spawn).mockReturnValue(child)
     const promise = initShellPath()
     vi.advanceTimersByTime(2100)
     await promise
-    expect(getShellPath()).toBe(process.env.PATH ?? '')
+    const segs = getShellPath().split(':')
+    expect(segs).toEqual(expect.arrayContaining(['/usr/bin', '/bin']))
     expect(child.kill).toHaveBeenCalled()
     vi.useRealTimers()
   })
@@ -73,7 +116,7 @@ describe('shellPath', () => {
 
     await initShellPath()
     expect(spawn).toHaveBeenCalledTimes(1)
-    expect(getShellPath()).toBe('/cached/path')
+    expect(getShellPath().split(':')).toContain('/cached/path')
   })
 
   test('falls back when exit code is non-zero', async () => {
@@ -84,6 +127,7 @@ describe('shellPath', () => {
     child.stdout.push(null)
     child.emit('close', 1)
     await promise
-    expect(getShellPath()).toBe(process.env.PATH ?? '')
+    const segs = getShellPath().split(':')
+    expect(segs).toEqual(expect.arrayContaining(['/usr/bin', '/bin']))
   })
 })
