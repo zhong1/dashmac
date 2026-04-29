@@ -89,6 +89,9 @@ function FailureDialog({
     if (m.startsWith('exitCode:')) {
       return t('commandRun.exitCode', { code: m.slice('exitCode:'.length) })
     }
+    if (m.startsWith('spawnError:')) {
+      return t('commandRun.spawnError', { msg: m.slice('spawnError:'.length) })
+    }
     return m
   }
 
