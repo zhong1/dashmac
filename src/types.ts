@@ -78,6 +78,14 @@ export interface AppTraffic {
   txTotal: number
 }
 
+export interface AppTrafficSnapshot {
+  name: string
+  rxRate: number   // bytes/sec, last 1s sample
+  txRate: number   // bytes/sec
+  rxBytes: number  // cumulative since last hourly flush
+  txBytes: number
+}
+
 export interface HistoryQuery {
   type: 'memory' | 'disk' | 'network'
   range: '1h' | '24h' | '7d' | '30d' | '90d'
@@ -97,7 +105,11 @@ export interface DashMacAPI {
   queryProcesses: () => Promise<ProcessInfo[]>
   queryDiskScan: (path: string) => Promise<FileEntry>
   queryConnections: () => Promise<NetworkConnection[]>
-  queryAppTraffic: (range: '24h' | '7d' | '30d') => Promise<AppTraffic[]>
+  queryAppTraffic: (range: 'today' | '7d' | '30d') => Promise<AppTraffic[]>
+  queryAppTrafficCurrent: () => Promise<AppTrafficSnapshot[]>
+  queryCumulativeTraffic: (range: 'today' | '7d' | '30d') => Promise<{ rxTotal: number; txTotal: number }>
+  dnsReverse: (ips: string[]) => Promise<Record<string, string | null>>
+  onAppTraffic: (callback: (snapshot: AppTrafficSnapshot[]) => void) => () => void
   exportData: (format: 'csv' | 'json', type: string) => Promise<string>
   revealFile: (path: string) => void
   openMainWindow: () => void
