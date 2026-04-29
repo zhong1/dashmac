@@ -163,13 +163,13 @@ function CustomCommandsEditor({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
 
-  const handleAdd = (label: string, command: string) => {
+  const handleAdd = (label: string, command: string, pathMode: 'absolute' | 'basename') => {
     const id = (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random()}`
-    onChange([...commands, { id, label, command }])
+    onChange([...commands, { id, label, command, pathMode }])
     setAdding(false)
   }
-  const handleEdit = (id: string, label: string, command: string) => {
-    onChange(commands.map((c) => (c.id === id ? { ...c, label, command } : c)))
+  const handleEdit = (id: string, label: string, command: string, pathMode: 'absolute' | 'basename') => {
+    onChange(commands.map((c) => (c.id === id ? { ...c, label, command, pathMode } : c)))
     setEditingId(null)
   }
   const handleDelete = (id: string) => {
@@ -187,7 +187,7 @@ function CustomCommandsEditor({
           <CommandForm
             key={c.id}
             initial={c}
-            onSave={(label, command) => handleEdit(c.id, label, command)}
+            onSave={(label, command, pathMode) => handleEdit(c.id, label, command, pathMode)}
             onCancel={() => setEditingId(null)}
           />
         ) : (
@@ -227,12 +227,13 @@ function CommandForm({
   onCancel,
 }: {
   initial?: CustomCommand
-  onSave: (label: string, command: string) => void
+  onSave: (label: string, command: string, pathMode: 'absolute' | 'basename') => void
   onCancel: () => void
 }) {
   const { t } = useTranslation()
   const [label, setLabel] = useState(initial?.label ?? '')
   const [command, setCommand] = useState(initial?.command ?? '')
+  const [pathMode, setPathMode] = useState<'absolute' | 'basename'>(initial?.pathMode ?? 'absolute')
 
   const labelTrim = label.trim()
   const cmdTrim = command.trim()
@@ -285,6 +286,17 @@ function CommandForm({
           className="flex-1 bg-bg-secondary border border-border-primary rounded px-2 py-1 text-sm font-mono text-text-primary"
         />
       </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-text-secondary w-16">{t('settings.customCommands.pathMode')}</span>
+        <select
+          value={pathMode}
+          onChange={(e) => setPathMode(e.target.value as 'absolute' | 'basename')}
+          className="bg-bg-secondary border border-border-primary rounded px-2 py-1 text-sm text-text-primary"
+        >
+          <option value="absolute">{t('settings.customCommands.pathModeAbsolute')}</option>
+          <option value="basename">{t('settings.customCommands.pathModeBasename')}</option>
+        </select>
+      </div>
       {empty && (
         <div className="text-xs text-status-red">{t('settings.customCommands.errorEmpty')}</div>
       )}
@@ -293,7 +305,7 @@ function CommandForm({
       )}
       <div className="flex gap-2">
         <button
-          onClick={() => onSave(labelTrim, cmdTrim)}
+          onClick={() => onSave(labelTrim, cmdTrim, pathMode)}
           disabled={disabled}
           className="text-xs px-3 py-1.5 bg-status-blue text-white rounded disabled:opacity-50"
         >{t('settings.customCommands.save')}</button>

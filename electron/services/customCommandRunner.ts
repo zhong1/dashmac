@@ -58,9 +58,12 @@ export class CustomCommandRunner {
     let okCount = 0
     let failCount = 0
 
+    const pathMode = cmd.pathMode ?? 'absolute'
+
     for (let i = 0; i < req.paths.length; i++) {
       const filePath = req.paths[i]
-      const result = await this.runOne(bin, staticArgs, filePath)
+      const argPath = pathMode === 'basename' ? path.basename(filePath) : filePath
+      const result = await this.runOne(bin, staticArgs, filePath, argPath)
 
       if (result.ok) {
         okCount++
@@ -85,10 +88,11 @@ export class CustomCommandRunner {
     bin: string,
     staticArgs: string[],
     filePath: string,
+    argPath: string = filePath,
   ): Promise<{ ok: true } | { ok: false; message: string; stderr: string }> {
     return new Promise((resolve) => {
       const cwd = path.dirname(filePath)
-      const argv = [...staticArgs, filePath]
+      const argv = [...staticArgs, argPath]
       let child: ChildProcess
       try {
         child = spawn(bin, argv, {

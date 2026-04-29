@@ -273,6 +273,9 @@ const zhCN: typeof en = {
       empty: '尚未配置任何命令。',
       errorParse: '命令解析失败（引号未闭合？）',
       errorEmpty: '标签和命令都不能为空',
+      pathMode: '路径形式',
+      pathModeAbsolute: '绝对路径',
+      pathModeBasename: '文件名',
     },
   },
   processControl: {

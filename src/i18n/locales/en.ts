@@ -271,6 +271,9 @@ const en = {
       empty: 'No commands configured.',
       errorParse: 'Failed to parse command (unclosed quote?)',
       errorEmpty: 'Label and command must not be empty',
+      pathMode: 'Path format',
+      pathModeAbsolute: 'Absolute path',
+      pathModeBasename: 'Filename only',
     },
   },
   processControl: {

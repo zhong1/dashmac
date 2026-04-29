@@ -87,6 +87,55 @@ describe('CustomCommandRunner — single success', () => {
       }),
     )
   })
+
+  test('pathMode "basename" passes only the filename as last argv (cwd unchanged)', async () => {
+    const child = makeFakeChild()
+    vi.mocked(spawn).mockReturnValue(child)
+
+    const runner = new CustomCommandRunner()
+    const settings = makeSettings([
+      { id: 'c1', label: 'bup', command: 'bup', pathMode: 'basename' },
+    ])
+
+    const promise = runner.run(
+      { runId: 'r1', commandId: 'c1', paths: ['/Users/me/Downloads/a.txt'] },
+      settings,
+      () => {},
+    )
+    await Promise.resolve(); await Promise.resolve()
+    child.emit('close', 0)
+    await promise
+
+    expect(spawn).toHaveBeenCalledWith(
+      'bup',
+      ['a.txt'],
+      expect.objectContaining({ cwd: '/Users/me/Downloads', shell: false }),
+    )
+  })
+
+  test('missing pathMode defaults to absolute (backwards compat)', async () => {
+    const child = makeFakeChild()
+    vi.mocked(spawn).mockReturnValue(child)
+
+    const runner = new CustomCommandRunner()
+    // No pathMode field set — simulates settings written before this feature.
+    const settings = makeSettings([{ id: 'c1', label: 'bup', command: 'bup' }])
+
+    const promise = runner.run(
+      { runId: 'r1', commandId: 'c1', paths: ['/Users/me/Downloads/a.txt'] },
+      settings,
+      () => {},
+    )
+    await Promise.resolve(); await Promise.resolve()
+    child.emit('close', 0)
+    await promise
+
+    expect(spawn).toHaveBeenCalledWith(
+      'bup',
+      ['/Users/me/Downloads/a.txt'],
+      expect.any(Object),
+    )
+  })
 })
 
 describe('CustomCommandRunner — failures and errors', () => {

@@ -191,6 +191,7 @@ export interface CustomCommand {
   id: string
   label: string
   command: string
+  pathMode?: 'absolute' | 'basename'   // default 'absolute'
 }
 
 export type CustomCommandProgressEvent =

@@ -99,7 +99,7 @@ function FailureDialog({
     <dialog
       ref={ref}
       onClose={onClose}
-      className="bg-bg-secondary text-text-primary border border-border-primary rounded-lg p-4 w-[640px] max-w-[90vw] backdrop:bg-black/40"
+      className="m-auto bg-bg-secondary text-text-primary border border-border-primary rounded-lg p-4 w-[640px] max-w-[90vw] backdrop:bg-black/40"
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium">
