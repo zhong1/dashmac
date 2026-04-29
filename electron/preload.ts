@@ -44,6 +44,8 @@ const api: DashMacAPI = {
   exportData: (format, type) => ipcRenderer.invoke('action:export', format, type),
   revealFile: (path) => ipcRenderer.send('action:reveal-file', path),
   openMainWindow: () => ipcRenderer.send('action:open-main-window'),
+  killProcess: (pid: number, name: string, signal: 'SIGTERM' | 'SIGKILL') =>
+    ipcRenderer.invoke('action:kill-process', pid, name, signal),
   getSettings: () => ipcRenderer.invoke('get:settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save:settings', settings),
 }
