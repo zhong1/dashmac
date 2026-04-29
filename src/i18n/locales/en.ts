@@ -62,6 +62,13 @@ const en = {
     downloadSpeed: 'Download Speed',
     uploadSpeed: 'Upload Speed',
     speedHistory: 'Speed History',
+    cumulative: {
+      title: 'Cumulative Traffic',
+      today: 'Today',
+      week: 'This week',
+      month: 'This month',
+      since: 'Since {time}',
+    },
     connections: {
       loading: 'Loading connections...',
       title: 'Active Connections',
@@ -71,13 +78,43 @@ const en = {
       local: 'Local',
       remote: 'Remote',
       state: 'State',
+      search: {
+        placeholder: 'Search...',
+        clear: 'Clear search',
+      },
+      resolveHostnames: 'Resolve hostnames',
+      countFiltered: '{filtered} / {total} connections',
     },
     trafficByApp: {
       title: 'Traffic by Application',
-      empty: 'No traffic data yet. Data is collected over time.',
       application: 'Application',
       download: 'Download',
       upload: 'Upload',
+      range: {
+        realtime: 'Live',
+        today: 'Today',
+        week: 'This week',
+        month: 'This month',
+      },
+      columns: {
+        name: 'Application',
+        rxRate: '↓ Live',
+        txRate: '↑ Live',
+        rxTotal: '↓ Total',
+        txTotal: '↑ Total',
+      },
+      search: {
+        placeholder: 'Search apps...',
+        clear: 'Clear search',
+      },
+      empty: {
+        realtime: 'Waiting for samples...',
+        history: 'No traffic data yet. Check back in a few minutes.',
+        unavailable: 'Failed to start network monitor.',
+      },
+    },
+    error: {
+      nettopFailed: 'Failed to start network monitor. Per-app traffic unavailable.',
     },
   },
   files: {

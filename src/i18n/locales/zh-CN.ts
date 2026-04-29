@@ -64,6 +64,13 @@ const zhCN: typeof en = {
     downloadSpeed: '下载速度',
     uploadSpeed: '上传速度',
     speedHistory: '速度历史',
+    cumulative: {
+      title: '累积流量',
+      today: '今日',
+      week: '本周',
+      month: '本月',
+      since: '起始 {time}',
+    },
     connections: {
       loading: '加载连接中…',
       title: '活动连接',
@@ -73,13 +80,43 @@ const zhCN: typeof en = {
       local: '本地',
       remote: '远程',
       state: '状态',
+      search: {
+        placeholder: '搜索...',
+        clear: '清空搜索',
+      },
+      resolveHostnames: '解析主机名',
+      countFiltered: '{filtered} / {total} 个连接',
     },
     trafficByApp: {
       title: '按应用统计流量',
-      empty: '暂无流量数据。数据将随时间累积。',
       application: '应用',
       download: '下载',
       upload: '上传',
+      range: {
+        realtime: '实时',
+        today: '今日',
+        week: '本周',
+        month: '本月',
+      },
+      columns: {
+        name: '应用',
+        rxRate: '↓ 当前',
+        txRate: '↑ 当前',
+        rxTotal: '↓ 累积',
+        txTotal: '↑ 累积',
+      },
+      search: {
+        placeholder: '搜索应用...',
+        clear: '清空搜索',
+      },
+      empty: {
+        realtime: '等待采样…',
+        history: '暂无流量数据。等几分钟后再来看。',
+        unavailable: '网络监控启动失败。',
+      },
+    },
+    error: {
+      nettopFailed: '网络监控启动失败。无法显示按应用流量。',
     },
   },
   files: {
