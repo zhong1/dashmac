@@ -62,4 +62,17 @@ describe('settingsStore', () => {
     expect(result.retentionDays).toBe(30)
     expect(result.language).toBe(DEFAULTS.language)
   })
+
+  test('DEFAULTS includes empty fileShortcuts and showHiddenFiles=false', () => {
+    expect(DEFAULTS.fileShortcuts).toEqual([])
+    expect(DEFAULTS.showHiddenFiles).toBe(false)
+  })
+
+  test('round-trip preserves fileShortcuts', () => {
+    const f = tmpFile()
+    created.push(f)
+    const next = { ...DEFAULTS, fileShortcuts: ['/Users/foo', '/Users/bar'] }
+    saveSettings(next, f)
+    expect(loadSettings(f)).toEqual(next)
+  })
 })

@@ -11,6 +11,8 @@ export const DEFAULTS: AppSettings = {
   launchAtLogin: false,
   language: 'auto',
   resolvedLanguage: 'en',
+  fileShortcuts: [],
+  showHiddenFiles: false,
 }
 
 function defaultPath(): string {
