@@ -47,7 +47,7 @@ export const useFilesStore = create<FilesState>((set, get) => ({
   entries: [],
   selection: new Set(),
   selectionAnchor: null,
-  sort: { column: 'name', dir: 'asc' },
+  sort: { column: 'modified', dir: 'desc' },
   clipboard: null,
   history: { back: [], forward: [] },
   showHidden: false,
@@ -68,7 +68,7 @@ export const useFilesStore = create<FilesState>((set, get) => ({
         entries: result.entries,
         selection: new Set(),
         selectionAnchor: null,
-        sort: { column: 'name', dir: 'asc' },
+        sort: { column: 'modified', dir: 'desc' },
         history: target === prev
           ? s.history
           : { back: [...s.history.back, prev], forward: [] },
