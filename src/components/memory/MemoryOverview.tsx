@@ -37,6 +37,7 @@ export default function MemoryOverview() {
 
   return (
     <div className="space-y-4">
+      <ProcessList />
       <div className="grid grid-cols-5 gap-4">
         <StatCard label={t('memory.total')} value={memory ? formatBytes(memory.total) : '--'} />
         <StatCard label={t('memory.used')} value={memory ? formatBytes(memory.used) : '--'} color="#1f6feb" />
@@ -73,7 +74,6 @@ export default function MemoryOverview() {
           <HistoryChart data={historyData} color="#1f6feb" formatValue={formatGB} unit=" GB" />
         )}
       </div>
-      <ProcessList />
     </div>
   )
 }
