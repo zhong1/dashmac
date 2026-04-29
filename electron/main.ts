@@ -8,6 +8,9 @@ import { collectNetwork, collectConnections } from './collectors/network'
 import { collectProcesses } from './collectors/process'
 import { Scheduler } from './services/scheduler'
 import { downsampleOldData } from './services/aggregator'
+import * as nettopCollector from './services/nettopCollector'
+import * as dnsCache from './services/dnsCache'
+import * as networkAggregator from './services/networkAggregator'
 import { loadSettings, saveSettings as persistSettings } from './services/settingsStore'
 import { resolveLang, setLang, getLang, t } from './i18n/index'
 import type { AppSettings } from '../src/types'
@@ -40,6 +43,7 @@ async function realtimeTick(): Promise<void> {
   sendToAllWindows('realtime:memory', memory)
   sendToAllWindows('realtime:disk', disk)
   sendToAllWindows('realtime:network', network)
+  sendToAllWindows('realtime:app-traffic', nettopCollector.getCurrent())
 }
 
 async function persistTick(): Promise<void> {
@@ -87,8 +91,24 @@ function registerIpcHandlers(): void {
   ipcMain.handle('query:connections', async () => {
     return collectConnections()
   })
-  ipcMain.handle('query:app-traffic', async (_event, _range: string) => {
-    return []
+  ipcMain.handle('query:app-traffic-current', async () => {
+    return nettopCollector.getCurrent()
+  })
+
+  ipcMain.handle('query:app-traffic', async (_e, range: 'today' | '7d' | '30d') => {
+    return networkAggregator.queryRange(range)
+  })
+
+  ipcMain.handle('query:cumulative-traffic', async (_e, range: 'today' | '7d' | '30d') => {
+    return networkAggregator.queryAllSum(range)
+  })
+
+  ipcMain.handle('query:dns-reverse', async (_e, ips: string[]) => {
+    const out: Record<string, string | null> = {}
+    await Promise.all(ips.map(async (ip) => {
+      out[ip] = await dnsCache.lookup(ip)
+    }))
+    return out
   })
   ipcMain.handle('action:export', async (_event, _format: string, _type: string) => {
     return ''
@@ -331,6 +351,15 @@ app.whenReady().then(() => {
   createMainWindow()
   createTray()
   startScheduler()
+
+  // Start nettop collector. Failure is non-fatal; the renderer will show an error state.
+  nettopCollector.start().catch(() => { /* error already set inside collector */ })
+
+  // Hourly flush of accumulated per-app traffic to SQLite.
+  setInterval(() => {
+    const deltas = nettopCollector.flushHourly()
+    if (deltas.length > 0) networkAggregator.flushAndPersist(deltas)
+  }, 60 * 60 * 1000)
 })
 
 app.on('window-all-closed', () => {})
@@ -341,5 +370,6 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
   scheduler?.stop()
+  nettopCollector.stop()
   closeDatabase()
 })
