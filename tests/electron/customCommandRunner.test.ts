@@ -223,3 +223,50 @@ describe('CustomCommandRunner — failures and errors', () => {
     expect(fe.stderr.length).toBeLessThanOrEqual(4096)
   })
 })
+
+describe('CustomCommandRunner — sequential execution', () => {
+  beforeEach(() => { vi.mocked(spawn).mockReset() })
+
+  test('second spawn does not start until first close', async () => {
+    const child1 = makeFakeChild()
+    const child2 = makeFakeChild()
+    const child3 = makeFakeChild()
+    vi.mocked(spawn)
+      .mockReturnValueOnce(child1)
+      .mockReturnValueOnce(child2)
+      .mockReturnValueOnce(child3)
+
+    const events: CustomCommandProgressEvent[] = []
+    const runner = new CustomCommandRunner()
+    const settings = makeSettings([{ id: 'c1', label: 'X', command: 'bup' }])
+
+    const promise = runner.run(
+      { runId: 'r1', commandId: 'c1', paths: ['/tmp/a', '/tmp/b', '/tmp/c'] },
+      settings,
+      (e) => events.push(e),
+    )
+
+    // After yielding a few microtasks, only the first spawn should have happened.
+    await Promise.resolve(); await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(1)
+
+    child1.emit('close', 0)
+    await Promise.resolve(); await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(2)
+
+    child2.emit('close', 0)
+    await Promise.resolve(); await Promise.resolve()
+    expect(spawn).toHaveBeenCalledTimes(3)
+
+    child3.emit('close', 0)
+    await promise
+
+    // Three advance events with monotonically increasing done counts.
+    const advances = events.filter((e) => e.type === 'advance') as Array<Extract<CustomCommandProgressEvent, { type: 'advance' }>>
+    expect(advances.map((a) => a.done)).toEqual([1, 2, 3])
+    expect(advances.map((a) => a.current)).toEqual(['a', 'b', 'c'])
+    expect(events[events.length - 1]).toEqual({
+      type: 'finish', runId: 'r1', ok: 3, failed: 0,
+    })
+  })
+})
