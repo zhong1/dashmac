@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from '../../i18n/index'
 import { useFilesStore, type SortColumn } from '../../stores/filesStore'
 import { formatRelativeTime } from '../../i18n/time'
@@ -38,16 +38,17 @@ interface FileListProps {
   renamingPath: string | null
   onRenameSubmit: (entry: DirEntry, newName: string) => Promise<{ ok: boolean; message?: string }>
   onRenameCancel: () => void
+  visible: DirEntry[]
 }
 
 export default function FileList({
   onContextRow, onContextEmpty,
   renamingPath, onRenameSubmit, onRenameCancel,
+  visible,
 }: FileListProps) {
   const { t, lang } = useTranslation()
-  const entries = useFilesStore((s) => s.entries)
-  const showHidden = useFilesStore((s) => s.showHidden)
   const selection = useFilesStore((s) => s.selection)
+  const selectionAnchor = useFilesStore((s) => s.selectionAnchor)
   const sort = useFilesStore((s) => s.sort)
   const dirError = useFilesStore((s) => s.dirError)
   const navigate = useFilesStore((s) => s.navigate)
@@ -59,10 +60,13 @@ export default function FileList({
   const setSelection = useFilesStore((s) => s.setSelection)
   const setSort = useFilesStore((s) => s.setSort)
 
-  const visible = useMemo(() => {
-    const filtered = showHidden ? entries : entries.filter((e) => !e.name.startsWith('.'))
-    return sortEntries(filtered, sort.column, sort.dir)
-  }, [entries, showHidden, sort])
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map())
+
+  useEffect(() => {
+    if (!selectionAnchor) return
+    const el = rowRefs.current.get(selectionAnchor)
+    if (el) el.scrollIntoView({ block: 'nearest' })
+  }, [selectionAnchor])
 
   const handleClick = (e: React.MouseEvent, entry: DirEntry) => {
     if (e.shiftKey) {
@@ -117,6 +121,10 @@ export default function FileList({
           {visible.map((e) => (
             <tr
               key={e.path}
+              ref={(el) => {
+                if (el) rowRefs.current.set(e.path, el)
+                else rowRefs.current.delete(e.path)
+              }}
               onClick={(ev) => handleClick(ev, e)}
               onDoubleClick={() => handleDoubleClick(e)}
               onContextMenu={(ev) => onContextRow(ev, e)}
@@ -163,17 +171,4 @@ function SortHeader({
       {label}{indicator}
     </th>
   )
-}
-
-function sortEntries(entries: DirEntry[], col: SortColumn, dir: 'asc' | 'desc'): DirEntry[] {
-  const sign = dir === 'asc' ? 1 : -1
-  return [...entries].sort((a, b) => {
-    // Directories always grouped first
-    if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
-    if (col === 'name') return sign * a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-    if (col === 'size') return sign * (a.size - b.size)
-    if (col === 'modified') return sign * (a.modifiedAt - b.modifiedAt)
-    if (col === 'type') return sign * a.ext.localeCompare(b.ext) || a.name.localeCompare(b.name)
-    return 0
-  })
 }
