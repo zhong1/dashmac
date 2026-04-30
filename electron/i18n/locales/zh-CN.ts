@@ -18,6 +18,15 @@ const zhCN: typeof en = {
       generic: '终止进程失败：{message}',
     },
   },
+  screenshot: {
+    permission: {
+      title: '需要屏幕录制权限',
+      message: 'DashMac 需要屏幕录制权限来截屏。',
+      detail: '请按以下步骤授权：\n1. 点击下方"打开系统设置"\n2. 在"隐私与安全性 → 屏幕录制"中勾选 DashMac\n3. 重启 DashMac（macOS 要求新授予的权限重启后生效）',
+      openSettings: '打开系统设置',
+      later: '稍后再说',
+    },
+  },
 }
 
 export default zhCN

@@ -16,6 +16,15 @@ const en = {
       generic: 'Failed to kill process: {message}',
     },
   },
+  screenshot: {
+    permission: {
+      title: 'Screen Recording permission required',
+      message: 'DashMac needs Screen Recording permission to capture screenshots.',
+      detail: 'Steps to grant:\n1. Click "Open System Settings" below\n2. In "Privacy & Security → Screen Recording", enable DashMac\n3. Restart DashMac (macOS requires a restart for new permissions to take effect)',
+      openSettings: 'Open System Settings',
+      later: 'Later',
+    },
+  },
 }
 
 export default en

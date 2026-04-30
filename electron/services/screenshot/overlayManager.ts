@@ -1,6 +1,7 @@
 import { BrowserWindow, type NativeImage } from 'electron'
 import path from 'path'
 import type { DisplayCapture } from './capture'
+import { getLang } from '../../i18n/index'
 
 export class OverlayManager {
   private windows: BrowserWindow[] = []
@@ -60,10 +61,11 @@ export class OverlayManager {
       win.focus()
     })
 
+    const lang = getLang()
     if (process.env['ELECTRON_RENDERER_URL']) {
-      await win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/overlay.html`)
+      await win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/overlay.html?lang=${lang}`)
     } else {
-      await win.loadFile(path.join(__dirname, '../renderer/overlay.html'))
+      await win.loadFile(path.join(__dirname, '../renderer/overlay.html'), { search: `lang=${lang}` })
     }
 
     return win
