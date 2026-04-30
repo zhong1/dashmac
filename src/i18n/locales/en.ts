@@ -4,6 +4,7 @@ const en = {
     memory: 'Memory',
     network: 'Network',
     files: 'Files',
+    toolbox: 'Toolbox',
     settings: 'Settings',
   },
   pages: {
@@ -11,6 +12,7 @@ const en = {
     memory: 'Memory Management',
     network: 'Network Analysis',
     files: 'Files',
+    toolbox: 'Toolbox',
     settings: 'Settings',
   },
   common: {
@@ -55,6 +57,24 @@ const en = {
     used: 'Used',
     available: 'Available',
     total: 'Total',
+  },
+  toolbox: {
+    empty: {
+      title: 'No tools enabled',
+      hint: 'Enable tools in Settings → Toolbox.',
+    },
+    open: 'Open',
+    comingSoon: {
+      title: 'Coming soon',
+      body: 'This tool is not implemented yet. Stay tuned.',
+      close: 'Close',
+    },
+    tools: {
+      screenshot: {
+        title: 'Screenshot',
+        desc: 'Snipaste-style region capture, annotation, and pin-to-screen.',
+      },
+    },
   },
   network: {
     download: 'Download',
@@ -219,6 +239,7 @@ const en = {
       system: 'System',
       export: 'Export Data',
       appearance: 'Appearance',
+      toolbox: 'Toolbox',
     },
     fields: {
       realtimeInterval: 'Real-time interval',
@@ -248,6 +269,10 @@ const en = {
       auto: 'System default',
       en: 'English',
       zhCN: '简体中文',
+    },
+    toolbox: {
+      description: 'Enable tools to make them appear in the Toolbox page.',
+      screenshotEnabled: 'Screenshot tool',
     },
     save: 'Save Settings',
     saving: 'Saving...',

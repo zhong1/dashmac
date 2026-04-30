@@ -6,6 +6,7 @@ const zhCN: typeof en = {
     memory: '内存',
     network: '网络',
     files: '文件',
+    toolbox: '工具箱',
     settings: '设置',
   },
   pages: {
@@ -13,6 +14,7 @@ const zhCN: typeof en = {
     memory: '内存管理',
     network: '网络分析',
     files: '文件',
+    toolbox: '工具箱',
     settings: '设置',
   },
   common: {
@@ -57,6 +59,24 @@ const zhCN: typeof en = {
     used: '已用',
     available: '可用',
     total: '总计',
+  },
+  toolbox: {
+    empty: {
+      title: '暂无启用的工具',
+      hint: '前往「设置 → 工具箱」启用工具。',
+    },
+    open: '打开',
+    comingSoon: {
+      title: '功能开发中',
+      body: '该工具尚在开发中，敬请期待。',
+      close: '关闭',
+    },
+    tools: {
+      screenshot: {
+        title: '截图',
+        desc: '类 Snipaste 的区域截图、标注与贴图。',
+      },
+    },
   },
   network: {
     download: '下载',
@@ -221,6 +241,7 @@ const zhCN: typeof en = {
       system: '系统',
       export: '导出数据',
       appearance: '外观',
+      toolbox: '工具箱',
     },
     fields: {
       realtimeInterval: '实时刷新频率',
@@ -250,6 +271,10 @@ const zhCN: typeof en = {
       auto: '跟随系统',
       en: 'English',
       zhCN: '简体中文',
+    },
+    toolbox: {
+      description: '启用工具后会出现在「工具箱」页面。',
+      screenshotEnabled: '截图工具',
     },
     save: '保存设置',
     saving: '保存中…',
