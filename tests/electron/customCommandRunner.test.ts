@@ -29,7 +29,17 @@ function makeSettings(commands: AppSettings['customCommands']): AppSettings {
     language: 'en', resolvedLanguage: 'en',
     fileShortcuts: [], showHiddenFiles: false,
     customCommands: commands,
-    toolbox: { screenshotEnabled: false },
+    toolbox: {
+      screenshotEnabled: false,
+      screenshot: {
+        captureHotkey: 'CommandOrControl+Shift+A',
+        pinHotkey: 'CommandOrControl+Shift+S',
+        hideAllPinsHotkey: 'CommandOrControl+Shift+H',
+        saveDir: '/tmp/dashmac-test',
+        defaultPenColor: '#FF0000',
+        defaultStrokeWidth: 'medium',
+      },
+    },
   }
 }
 

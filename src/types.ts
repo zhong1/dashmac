@@ -190,6 +190,16 @@ export interface AppSettings {
 
 export interface ToolboxSettings {
   screenshotEnabled: boolean   // default: false
+  screenshot: ScreenshotSettings
+}
+
+export interface ScreenshotSettings {
+  captureHotkey: string
+  pinHotkey: string
+  hideAllPinsHotkey: string
+  saveDir: string
+  defaultPenColor: string
+  defaultStrokeWidth: 'thin' | 'medium' | 'thick'
 }
 
 export interface CustomCommand {

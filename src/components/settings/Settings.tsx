@@ -8,7 +8,17 @@ const DEFAULTS: AppSettings = {
   language: 'auto', resolvedLanguage: 'en',
   fileShortcuts: [], showHiddenFiles: false,
   customCommands: [],
-  toolbox: { screenshotEnabled: false },
+  toolbox: {
+    screenshotEnabled: false,
+    screenshot: {
+      captureHotkey: 'CommandOrControl+Shift+A',
+      pinHotkey: 'CommandOrControl+Shift+S',
+      hideAllPinsHotkey: 'CommandOrControl+Shift+H',
+      saveDir: '',
+      defaultPenColor: '#FF0000',
+      defaultStrokeWidth: 'medium',
+    },
+  },
 }
 
 export default function Settings() {

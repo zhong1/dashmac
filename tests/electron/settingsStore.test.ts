@@ -103,28 +103,68 @@ describe('settingsStore', () => {
   })
 
   test('DEFAULTS includes toolbox.screenshotEnabled=false', () => {
-    expect(DEFAULTS.toolbox).toEqual({ screenshotEnabled: false })
+    expect(DEFAULTS.toolbox.screenshotEnabled).toBe(false)
   })
 
   test('round-trip preserves toolbox.screenshotEnabled', () => {
     const f = tmpFile()
     created.push(f)
-    const next = { ...DEFAULTS, toolbox: { screenshotEnabled: true } }
+    const next = { ...DEFAULTS, toolbox: { ...DEFAULTS.toolbox, screenshotEnabled: true } }
     saveSettings(next, f)
-    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: true })
+    expect(loadSettings(f).toolbox.screenshotEnabled).toBe(true)
   })
 
   test('migration: existing settings.json without toolbox gets defaults', () => {
     const f = tmpFile()
     created.push(f)
     fs.writeFileSync(f, JSON.stringify({ retentionDays: 30 }), 'utf8')
-    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: false })
+    expect(loadSettings(f).toolbox).toEqual(DEFAULTS.toolbox)
   })
 
   test('migration: settings.json with empty toolbox object gets defaults filled in', () => {
     const f = tmpFile()
     created.push(f)
     fs.writeFileSync(f, JSON.stringify({ toolbox: {} }), 'utf8')
-    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: false })
+    expect(loadSettings(f).toolbox).toEqual(DEFAULTS.toolbox)
+  })
+
+  test('DEFAULTS includes full screenshot settings', () => {
+    expect(DEFAULTS.toolbox.screenshot).toEqual({
+      captureHotkey: 'CommandOrControl+Shift+A',
+      pinHotkey: 'CommandOrControl+Shift+S',
+      hideAllPinsHotkey: 'CommandOrControl+Shift+H',
+      saveDir: path.join(os.homedir(), 'Pictures', 'DashMac'),
+      defaultPenColor: '#FF0000',
+      defaultStrokeWidth: 'medium',
+    })
+  })
+
+  test('round-trip preserves screenshot.captureHotkey', () => {
+    const f = tmpFile()
+    created.push(f)
+    const next = {
+      ...DEFAULTS,
+      toolbox: { ...DEFAULTS.toolbox, screenshot: { ...DEFAULTS.toolbox.screenshot, captureHotkey: 'F1' } },
+    }
+    saveSettings(next, f)
+    expect(loadSettings(f).toolbox.screenshot.captureHotkey).toBe('F1')
+  })
+
+  test('migration: settings.json without toolbox.screenshot gets full defaults', () => {
+    const f = tmpFile()
+    created.push(f)
+    fs.writeFileSync(f, JSON.stringify({ toolbox: { screenshotEnabled: true } }), 'utf8')
+    const result = loadSettings(f)
+    expect(result.toolbox.screenshotEnabled).toBe(true)
+    expect(result.toolbox.screenshot).toEqual(DEFAULTS.toolbox.screenshot)
+  })
+
+  test('migration: partial toolbox.screenshot gets remaining fields filled in', () => {
+    const f = tmpFile()
+    created.push(f)
+    fs.writeFileSync(f, JSON.stringify({ toolbox: { screenshot: { captureHotkey: 'F1' } } }), 'utf8')
+    const result = loadSettings(f)
+    expect(result.toolbox.screenshot.captureHotkey).toBe('F1')
+    expect(result.toolbox.screenshot.saveDir).toBe(DEFAULTS.toolbox.screenshot.saveDir)
   })
 })
