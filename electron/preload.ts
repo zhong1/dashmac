@@ -64,6 +64,15 @@ const api: DashMacAPI = {
     ipcRenderer.on('cmd:progress', listener)
     return () => ipcRenderer.removeListener('cmd:progress', listener)
   },
+  triggerScreenshotCapture: () => ipcRenderer.send('screenshot:trigger-capture'),
+  checkScreenshotPermission: () => ipcRenderer.invoke('screenshot:check-permission'),
+  openScreenshotSystemSettings: () => ipcRenderer.send('screenshot:open-system-settings'),
+  chooseDirectory: (currentPath?: string) => ipcRenderer.invoke('dialog:choose-directory', currentPath),
+  onToast: (callback: (event: { kind: 'success' | 'error' | 'info'; message: string }) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, payload: any) => callback(payload)
+    ipcRenderer.on('toast:push', listener)
+    return () => ipcRenderer.removeListener('toast:push', listener)
+  },
 }
 
 contextBridge.exposeInMainWorld('api', api)

@@ -23,12 +23,15 @@ import { zipPaths } from './services/zipService'
 import { killProcess } from './services/processControl'
 import { initShellPath } from './services/shellPath'
 import { CustomCommandRunner } from './services/customCommandRunner'
+import { ScreenshotService } from './services/screenshot/screenshotService'
+import { checkScreenRecordingPermission, openSystemSettings as openScreenshotSettings } from './services/screenshot/permissions'
 
 let mainWindow: BrowserWindow | null = null
 let trayWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let scheduler: Scheduler | null = null
 const customCommandRunner = new CustomCommandRunner()
+const screenshotService = new ScreenshotService()
 
 const PROTECTED_PROCESS_NAMES = new Set(['launchd', 'kernel_task', 'WindowServer'])
 let isKillDialogOpen = false
@@ -129,6 +132,38 @@ function registerIpcHandlers(): void {
       rebuildTrayMenu()
       sendToAllWindows('i18n:lang-changed', newResolved)
     }
+    if (settings.toolbox.screenshotEnabled) {
+      screenshotService.hotkey.reregister(
+        settings.toolbox.screenshot.captureHotkey,
+        () => screenshotService.runCapture('hotkey'),
+      )
+    } else {
+      screenshotService.hotkey.unregisterAll()
+    }
+  })
+
+  ipcMain.on('screenshot:trigger-capture', () => {
+    void screenshotService.runCapture('card')
+  })
+  ipcMain.handle('screenshot:check-permission', () => {
+    return checkScreenRecordingPermission()
+  })
+  ipcMain.on('screenshot:open-system-settings', () => {
+    openScreenshotSettings()
+  })
+  ipcMain.on('screenshot:confirm', (_e, payload) => {
+    void screenshotService.handleConfirm(payload)
+  })
+  ipcMain.on('screenshot:cancel', () => {
+    screenshotService.handleCancel()
+  })
+  ipcMain.handle('dialog:choose-directory', async (_e, currentPath?: string) => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory', 'createDirectory'],
+      defaultPath: currentPath,
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
   })
 
   ipcMain.on('action:reveal-file', (_event, filePath: string) => {
@@ -375,6 +410,15 @@ app.whenReady().then(() => {
   createTray()
   startScheduler()
 
+  screenshotService.setMainWindow(mainWindow)
+  screenshotService.setTranslator(t)
+  if (stored.toolbox.screenshotEnabled) {
+    screenshotService.hotkey.register(
+      stored.toolbox.screenshot.captureHotkey,
+      () => screenshotService.runCapture('hotkey'),
+    )
+  }
+
   // Start nettop collector. Failure is non-fatal; the renderer will show an error state.
   nettopCollector.start().catch(() => { /* error already set inside collector */ })
 
@@ -395,5 +439,6 @@ app.on('before-quit', () => {
   scheduler?.stop()
   nettopCollector.stop()
   customCommandRunner.disposeAll()
+  screenshotService.hotkey.unregisterAll()
   closeDatabase()
 })

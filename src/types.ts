@@ -172,6 +172,12 @@ export interface DashMacAPI {
     | { ok: false; message: string }
   >
   onCommandProgress: (callback: (event: CustomCommandProgressEvent) => void) => () => void
+  // Screenshot
+  triggerScreenshotCapture: () => void
+  checkScreenshotPermission: () => Promise<'granted' | 'denied' | 'not-determined' | 'restricted'>
+  openScreenshotSystemSettings: () => void
+  chooseDirectory: (currentPath?: string) => Promise<string | null>
+  onToast: (callback: (event: { kind: 'success' | 'error' | 'info'; message: string }) => void) => () => void
 }
 
 export interface AppSettings {
