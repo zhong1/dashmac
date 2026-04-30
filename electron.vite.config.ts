@@ -20,9 +20,13 @@ export default defineConfig({
     build: {
       outDir: 'out/preload',
       rollupOptions: {
-        input: resolve('electron/preload.ts'),
+        input: {
+          preload: resolve('electron/preload.ts'),
+          'preload-overlay': resolve('electron/preload-overlay.ts'),
+        },
         output: {
           format: 'cjs',
+          entryFileNames: '[name].cjs',
         },
       },
     },
@@ -33,7 +37,10 @@ export default defineConfig({
     build: {
       outDir: 'out/renderer',
       rollupOptions: {
-        input: resolve('index.html'),
+        input: {
+          index: resolve('index.html'),
+          overlay: resolve('overlay.html'),
+        },
       },
     },
   },

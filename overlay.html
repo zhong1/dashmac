@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+    <title>DashMac Capture</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; cursor: crosshair; user-select: none; }
+      body { background: transparent; }
+    </style>
+  </head>
+  <body>
+    <div id="overlay-root"></div>
+    <script type="module" src="/src/overlay-main.tsx"></script>
+  </body>
+</html>
