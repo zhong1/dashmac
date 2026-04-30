@@ -101,4 +101,30 @@ describe('settingsStore', () => {
     const result = loadSettings(f)
     expect(result.customCommands).toEqual([])
   })
+
+  test('DEFAULTS includes toolbox.screenshotEnabled=false', () => {
+    expect(DEFAULTS.toolbox).toEqual({ screenshotEnabled: false })
+  })
+
+  test('round-trip preserves toolbox.screenshotEnabled', () => {
+    const f = tmpFile()
+    created.push(f)
+    const next = { ...DEFAULTS, toolbox: { screenshotEnabled: true } }
+    saveSettings(next, f)
+    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: true })
+  })
+
+  test('migration: existing settings.json without toolbox gets defaults', () => {
+    const f = tmpFile()
+    created.push(f)
+    fs.writeFileSync(f, JSON.stringify({ retentionDays: 30 }), 'utf8')
+    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: false })
+  })
+
+  test('migration: settings.json with empty toolbox object gets defaults filled in', () => {
+    const f = tmpFile()
+    created.push(f)
+    fs.writeFileSync(f, JSON.stringify({ toolbox: {} }), 'utf8')
+    expect(loadSettings(f).toolbox).toEqual({ screenshotEnabled: false })
+  })
 })

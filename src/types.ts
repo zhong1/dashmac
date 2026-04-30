@@ -185,6 +185,11 @@ export interface AppSettings {
   fileShortcuts: string[]      // NEW; absolute paths; default []
   showHiddenFiles: boolean     // NEW; default false
   customCommands: CustomCommand[]
+  toolbox: ToolboxSettings
+}
+
+export interface ToolboxSettings {
+  screenshotEnabled: boolean   // default: false
 }
 
 export interface CustomCommand {

@@ -14,6 +14,7 @@ export const DEFAULTS: AppSettings = {
   fileShortcuts: [],
   showHiddenFiles: false,
   customCommands: [],
+  toolbox: { screenshotEnabled: false },
 }
 
 function defaultPath(): string {
@@ -25,7 +26,11 @@ export function loadSettings(filepath?: string): AppSettings {
   try {
     const raw = fs.readFileSync(p, 'utf8')
     const parsed = JSON.parse(raw) as Partial<AppSettings>
-    return { ...DEFAULTS, ...parsed }
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      toolbox: { ...DEFAULTS.toolbox, ...(parsed.toolbox ?? {}) },
+    }
   } catch {
     return { ...DEFAULTS }
   }
