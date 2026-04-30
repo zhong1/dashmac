@@ -8,12 +8,13 @@ import MemoryOverview from './components/memory/MemoryOverview'
 import NetworkOverview from './components/network/NetworkOverview'
 import FilesPage from './components/files/FilesPage'
 import Settings from './components/settings/Settings'
+import ToolboxPage from './components/toolbox/ToolboxPage'
 import TrayPanel from './components/tray/TrayPanel'
 import ToastRoot from './components/common/Toast'
 import CommandRunStatus from './components/common/CommandRunStatus'
 import { useCommandRunStore } from './stores/commandRunStore'
 
-type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'settings'
+type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'toolbox' | 'settings'
 
 export default function App() {
   const isTray = window.location.hash === '#/tray'
@@ -73,6 +74,8 @@ function PageContent({ page, onNavigate }: { page: Page; onNavigate: (p: Page) =
       return <NetworkOverview />
     case 'files':
       return <FilesPage />
+    case 'toolbox':
+      return <ToolboxPage />
     case 'settings':
       return <Settings />
   }

@@ -29,6 +29,7 @@ function makeSettings(commands: AppSettings['customCommands']): AppSettings {
     language: 'en', resolvedLanguage: 'en',
     fileShortcuts: [], showHiddenFiles: false,
     customCommands: commands,
+    toolbox: { screenshotEnabled: false },
   }
 }
 
