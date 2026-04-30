@@ -233,6 +233,30 @@ const zhCN: typeof en = {
     free: '可用 {size}',
     open: '打开 DashMac',
   },
+  screenshot: {
+    permission: {
+      title: '需要屏幕录制权限',
+      message: 'DashMac 需要屏幕录制权限来截屏。',
+      detail: '请按以下步骤授权：\n1. 点击下方"打开系统设置"\n2. 在"隐私与安全性 → 屏幕录制"中勾选 DashMac\n3. 重启 DashMac（macOS 要求新授予的权限重启后生效）',
+      openSettings: '打开系统设置',
+      later: '稍后再说',
+      statusGranted: '状态：已授权',
+      statusDenied: '状态：未授权',
+      statusNotDetermined: '状态：未确定',
+      recheck: '重新检查',
+    },
+    toolbar: {
+      copy: '复制',
+      cancel: '取消',
+    },
+    toast: {
+      copied: '截图已复制',
+    },
+    settings: {
+      captureHotkey: '截图快捷键',
+      invalidHotkey: '快捷键无效',
+    },
+  },
   settings: {
     sections: {
       dataCollection: '数据采集',

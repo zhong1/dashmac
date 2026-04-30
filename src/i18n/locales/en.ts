@@ -231,6 +231,30 @@ const en = {
     free: '{size} free',
     open: 'Open DashMac',
   },
+  screenshot: {
+    permission: {
+      title: 'Screen Recording permission required',
+      message: 'DashMac needs Screen Recording permission to capture screenshots.',
+      detail: 'Steps to grant:\n1. Click "Open System Settings" below\n2. In "Privacy & Security → Screen Recording", enable DashMac\n3. Restart DashMac (macOS requires a restart for new permissions to take effect)',
+      openSettings: 'Open System Settings',
+      later: 'Later',
+      statusGranted: 'Status: Granted',
+      statusDenied: 'Status: Denied',
+      statusNotDetermined: 'Status: Not yet determined',
+      recheck: 'Re-check',
+    },
+    toolbar: {
+      copy: 'Copy',
+      cancel: 'Cancel',
+    },
+    toast: {
+      copied: 'Screenshot copied',
+    },
+    settings: {
+      captureHotkey: 'Capture hotkey',
+      invalidHotkey: 'Invalid shortcut',
+    },
+  },
   settings: {
     sections: {
       dataCollection: 'Data Collection',
