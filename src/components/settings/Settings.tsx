@@ -8,6 +8,7 @@ const DEFAULTS: AppSettings = {
   language: 'auto', resolvedLanguage: 'en',
   fileShortcuts: [], showHiddenFiles: false,
   customCommands: [],
+  toolbox: { screenshotEnabled: false },
 }
 
 export default function Settings() {
@@ -84,10 +85,10 @@ export default function Settings() {
 
       <Section title={t('settings.sections.system')}>
         <Field label={t('settings.fields.launchAtLogin')}>
-          <button onClick={() => setSettings({ ...settings, launchAtLogin: !settings.launchAtLogin })}
-            className={`w-10 h-5 rounded-full transition-colors ${settings.launchAtLogin ? 'bg-status-blue' : 'bg-border-primary'}`}>
-            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${settings.launchAtLogin ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </button>
+          <Toggle
+            value={settings.launchAtLogin}
+            onChange={(v) => setSettings({ ...settings, launchAtLogin: v })}
+          />
         </Field>
       </Section>
 
@@ -99,6 +100,25 @@ export default function Settings() {
             <option value="en">{t('settings.language.en')}</option>
             <option value="zh-CN">{t('settings.language.zhCN')}</option>
           </select>
+        </Field>
+      </Section>
+
+      <Section title={t('settings.sections.toolbox')}>
+        <p className="text-xs text-text-secondary mb-3">
+          {t('settings.toolbox.description')}
+        </p>
+        <Field label={t('settings.toolbox.screenshotEnabled')}>
+          <Toggle
+            value={settings.toolbox.screenshotEnabled}
+            onChange={async (v) => {
+              const updated = {
+                ...settings,
+                toolbox: { ...settings.toolbox, screenshotEnabled: v },
+              }
+              setSettings(updated)
+              await window.api.saveSettings(updated)
+            }}
+          />
         </Field>
       </Section>
 
@@ -149,6 +169,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-xs text-text-secondary">{label}</span>
       {children}
     </div>
+  )
+}
+
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!value)}
+      className={`w-10 h-5 rounded-full transition-colors ${value ? 'bg-status-blue' : 'bg-border-primary'}`}
+    >
+      <div className={`w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0.5'}`} />
+    </button>
   )
 }
 
