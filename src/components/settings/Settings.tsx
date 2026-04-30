@@ -130,6 +130,9 @@ export default function Settings() {
             }}
           />
         </Field>
+        {settings.toolbox.screenshotEnabled && (
+          <ScreenshotSubSection settings={settings} setSettings={setSettings} />
+        )}
       </Section>
 
       <Section title={t('settings.customCommands.title')}>
@@ -190,6 +193,90 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     >
       <div className={`w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0.5'}`} />
     </button>
+  )
+}
+
+function ScreenshotSubSection({
+  settings,
+  setSettings,
+}: {
+  settings: AppSettings
+  setSettings: (s: AppSettings) => void
+}) {
+  const { t } = useTranslation()
+  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'not-determined' | 'restricted' | null>(null)
+  const [hotkeyDraft, setHotkeyDraft] = useState(settings.toolbox.screenshot.captureHotkey)
+  const [hotkeyError, setHotkeyError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setHotkeyDraft(settings.toolbox.screenshot.captureHotkey)
+  }, [settings.toolbox.screenshot.captureHotkey])
+
+  useEffect(() => {
+    let mounted = true
+    window.api.checkScreenshotPermission()
+      .then((s) => { if (mounted) setPermissionStatus(s) })
+      .catch(() => { if (mounted) setPermissionStatus(null) })
+    return () => { mounted = false }
+  }, [])
+
+  const recheck = () => {
+    window.api.checkScreenshotPermission().then(setPermissionStatus)
+  }
+
+  const saveHotkey = async () => {
+    const trimmed = hotkeyDraft.trim()
+    if (trimmed.length === 0) {
+      setHotkeyError(t('screenshot.settings.invalidHotkey'))
+      return
+    }
+    setHotkeyError(null)
+    const updated: AppSettings = {
+      ...settings,
+      toolbox: {
+        ...settings.toolbox,
+        screenshot: { ...settings.toolbox.screenshot, captureHotkey: trimmed },
+      },
+    }
+    setSettings(updated)
+    await window.api.saveSettings(updated)
+  }
+
+  const statusLabel =
+    permissionStatus === 'granted' ? t('screenshot.permission.statusGranted') :
+    permissionStatus === 'denied' || permissionStatus === 'restricted' ? t('screenshot.permission.statusDenied') :
+    t('screenshot.permission.statusNotDetermined')
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border-primary space-y-3">
+      <Field label={t('screenshot.settings.captureHotkey')}>
+        <input
+          value={hotkeyDraft}
+          onChange={(e) => setHotkeyDraft(e.target.value)}
+          onBlur={saveHotkey}
+          placeholder="CommandOrControl+Shift+A"
+          className="bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs font-mono text-text-primary w-64"
+        />
+      </Field>
+      {hotkeyError && <div className="text-xs text-status-red">{hotkeyError}</div>}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-text-secondary">{statusLabel}</span>
+        <button
+          onClick={recheck}
+          className="text-xs px-2 py-1 border border-border-primary rounded hover:bg-bg-tertiary text-text-primary"
+        >
+          {t('screenshot.permission.recheck')}
+        </button>
+        {(permissionStatus === 'denied' || permissionStatus === 'restricted') && (
+          <button
+            onClick={() => window.api.openScreenshotSystemSettings()}
+            className="text-xs px-2 py-1 bg-status-blue text-white rounded"
+          >
+            {t('screenshot.permission.openSettings')}
+          </button>
+        )}
+      </div>
+    </div>
   )
 }
 
