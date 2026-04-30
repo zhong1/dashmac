@@ -65,5 +65,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON memory_stats(timestamp);
 CREATE INDEX IF NOT EXISTS idx_disk_timestamp ON disk_stats(timestamp);
 CREATE INDEX IF NOT EXISTS idx_network_timestamp ON network_stats(timestamp);
 CREATE INDEX IF NOT EXISTS idx_process_timestamp ON process_snapshots(timestamp);
-CREATE INDEX IF NOT EXISTS idx_app_traffic_date_app ON app_traffic(date, app_name);
+-- UNIQUE so ON CONFLICT(date, app_name) upsert prepares on legacy DBs whose
+-- app_traffic was created before the table-level UNIQUE constraint landed.
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_app_traffic_date_app ON app_traffic(date, app_name);
 `

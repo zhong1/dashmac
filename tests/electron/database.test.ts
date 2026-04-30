@@ -35,7 +35,32 @@ describe('schema', () => {
     expect(names).toContain('idx_memory_timestamp')
     expect(names).toContain('idx_disk_timestamp')
     expect(names).toContain('idx_network_timestamp')
-    expect(names).toContain('idx_app_traffic_date_app')
+    expect(names).toContain('uniq_app_traffic_date_app')
+  })
+
+  it('migrates legacy app_traffic schema (no table-level UNIQUE) so upsert prepares', () => {
+    // Simulate a DB created before the UNIQUE constraint was added to app_traffic.
+    const legacy = new Database(':memory:')
+    legacy.exec(`
+      CREATE TABLE app_traffic (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        app_name TEXT NOT NULL,
+        rx_total INTEGER NOT NULL,
+        tx_total INTEGER NOT NULL
+      );
+      CREATE INDEX idx_app_traffic_date_app ON app_traffic(date, app_name);
+    `)
+    createDatabase(legacy)
+    expect(() => {
+      legacy.prepare(`
+        INSERT INTO app_traffic (date, app_name, rx_total, tx_total)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(date, app_name) DO UPDATE SET
+          rx_total = rx_total + excluded.rx_total
+      `).run('2026-04-30', 'a', 1, 2)
+    }).not.toThrow()
+    legacy.close()
   })
 })
 
