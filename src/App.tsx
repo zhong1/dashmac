@@ -13,6 +13,7 @@ import TrayPanel from './components/tray/TrayPanel'
 import ToastRoot from './components/common/Toast'
 import CommandRunStatus from './components/common/CommandRunStatus'
 import { useCommandRunStore } from './stores/commandRunStore'
+import { useToastStore } from './stores/toastStore'
 
 type Page = 'dashboard' | 'memory' | 'network' | 'files' | 'toolbox' | 'settings'
 
@@ -48,6 +49,12 @@ function MainApp() {
       }
     })
     return unsubscribe
+  }, [])
+
+  useEffect(() => {
+    return window.api.onToast(({ kind, message }) => {
+      useToastStore.getState().push(kind, message)
+    })
   }, [])
 
   return (

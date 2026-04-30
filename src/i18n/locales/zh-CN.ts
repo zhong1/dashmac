@@ -66,11 +66,6 @@ const zhCN: typeof en = {
       hint: '前往「设置 → 工具箱」启用工具。',
     },
     open: '打开',
-    comingSoon: {
-      title: '功能开发中',
-      body: '该工具尚在开发中，敬请期待。',
-      close: '关闭',
-    },
     tools: {
       screenshot: {
         title: '截图',

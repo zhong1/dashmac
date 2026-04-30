@@ -41,18 +41,13 @@ export class OverlayManager {
       movable: false,
       skipTaskbar: true,
       hasShadow: false,
+      show: false,
       webPreferences: {
         preload: path.join(__dirname, '../preload/preload-overlay.cjs'),
         contextIsolation: true,
       },
     })
     win.setAlwaysOnTop(true, 'screen-saver')
-
-    if (process.env['ELECTRON_RENDERER_URL']) {
-      await win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/overlay.html`)
-    } else {
-      await win.loadFile(path.join(__dirname, '../renderer/overlay.html'))
-    }
 
     win.webContents.once('did-finish-load', () => {
       win.webContents.send('screenshot:overlay-init', {
@@ -61,7 +56,15 @@ export class OverlayManager {
         bounds: cap.bounds,
         scaleFactor: cap.scaleFactor,
       })
+      win.show()
+      win.focus()
     })
+
+    if (process.env['ELECTRON_RENDERER_URL']) {
+      await win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/overlay.html`)
+    } else {
+      await win.loadFile(path.join(__dirname, '../renderer/overlay.html'))
+    }
 
     return win
   }

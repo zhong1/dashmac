@@ -64,11 +64,6 @@ const en = {
       hint: 'Enable tools in Settings → Toolbox.',
     },
     open: 'Open',
-    comingSoon: {
-      title: 'Coming soon',
-      body: 'This tool is not implemented yet. Stay tuned.',
-      close: 'Close',
-    },
     tools: {
       screenshot: {
         title: 'Screenshot',
