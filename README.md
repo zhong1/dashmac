@@ -59,6 +59,24 @@ npm run dev
 
 This opens the Electron window and a tray icon. Code changes in `src/` hot-reload instantly; changes in `electron/` trigger a restart.
 
+#### Debugging the Toolbox → Screenshot tool
+
+1. **Grant Screen Recording permission to the dev Electron binary.** The first capture will silently fail (or surface a dialog) because macOS gates screen capture per-binary. Open `System Settings → Privacy & Security → Screen Recording`, enable the entry for `Electron` (path: `node_modules/electron/dist/Electron.app`), then **fully quit** Electron and run `npm run dev` again. You'll need to re-grant after each `electron` version bump.
+
+2. **Trigger capture two ways:**
+   - **Card**: sidebar → Toolbox → click the Screenshot card. Source is `'card'`; on success, a toast pushes via IPC `toast:push` to the main window.
+   - **Global hotkey**: configure under `Settings → Screenshot`. Source is `'hotkey'`; on success, a native macOS Notification appears (the main window may not be visible).
+
+3. **Logs:**
+   - Main process (`electron/services/screenshot/*`): `console.log` / `console.error` print to the terminal running `npm run dev`. Look for `[screenshot]` prefixes.
+   - Main window renderer: `Cmd + Option + I` opens DevTools.
+   - **Overlay window**: it's `frame: false` + `alwaysOnTop: 'screen-saver'`, so the menu bar shortcut won't reach it. Temporarily add `win.webContents.openDevTools({ mode: 'detach' })` inside `OverlayManager.createWindow` (`electron/services/screenshot/overlayManager.ts`) — detached mode floats above the overlay so you can inspect React state for `OverlayApp` / `SelectionLayer` / `Magnifier` / `Toolbar`.
+
+4. **Workflow tips:**
+   - The overlay covers the whole display — press `ESC` to dismiss before switching back to your editor.
+   - Saving a file under `electron/` restarts the main process and clears any in-flight capture state; re-trigger from scratch.
+   - Renderer-only edits (overlay UI, toolbar, magnifier) hot-reload without re-triggering capture, but you'll need to re-open the overlay to see the new render.
+
 ### Run Tests
 
 ```bash

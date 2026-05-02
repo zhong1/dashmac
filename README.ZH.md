@@ -96,6 +96,24 @@ npm run dev
 
 渲染进程就是标准的 React 应用，直接使用 Chrome DevTools 即可。推荐安装 React Developer Tools 浏览器扩展。
 
+#### 调试工具箱 → 截图工具
+
+1. **给 dev 模式的 Electron 二进制授予屏幕录制权限。** macOS 按二进制授权截屏，第一次截图会静默失败或弹权限提示框。打开 `系统设置 → 隐私与安全性 → 屏幕录制`，勾选 `Electron`（路径：`node_modules/electron/dist/Electron.app`），**完全退出** Electron 后再 `npm run dev`。每次升级 `electron` 版本都要重新授权。
+
+2. **两种触发方式：**
+   - **卡片触发**：侧边栏 → 工具箱 → 点击"截图"卡片。`source = 'card'`，截图成功后通过 IPC `toast:push` 在主窗口弹 toast。
+   - **全局热键**：在 `设置 → 截图` 配置。`source = 'hotkey'`，截图成功后弹系统通知（此时主窗口可能没打开）。
+
+3. **查看日志：**
+   - 主进程（`electron/services/screenshot/*`）：`console.log` / `console.error` 输出到运行 `npm run dev` 的终端。搜索 `[screenshot]` 前缀。
+   - 主窗口渲染进程：`Cmd + Option + I` 打开 DevTools。
+   - **overlay 窗口**：因为是 `frame: false` + `alwaysOnTop: 'screen-saver'`，菜单栏快捷键无法触达。临时在 `electron/services/screenshot/overlayManager.ts` 的 `OverlayManager.createWindow` 内加一句 `win.webContents.openDevTools({ mode: 'detach' })`——detach 模式会浮在 overlay 之上，可以查看 `OverlayApp` / `SelectionLayer` / `Magnifier` / `Toolbar` 的 React 状态。
+
+4. **工作流提示：**
+   - overlay 会盖满整屏，按 `ESC` 取消后再切回编辑器。
+   - 保存 `electron/` 下的文件会重启主进程并清空当前截图状态，需要重新触发。
+   - 只改渲染端代码（overlay UI、工具栏、放大镜）会热重载，但需要重新打开 overlay 才能看到新的渲染结果。
+
 ### 运行测试
 
 ```bash
