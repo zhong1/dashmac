@@ -59,14 +59,11 @@
     "better-sqlite3": "^12.8.0",
     "d3-hierarchy": "^3.1.2",
     "d3-scale": "^4.0.2",
-    "electron": "^41.2.0",
-    "electron-vite": "^5.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-is": "^19.2.5",
     "recharts": "^3.8.1",
     "systeminformation": "^5.31.5",
-    "vite": "^6.4.2",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -81,11 +78,14 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.27",
+    "electron": "^41.2.0",
     "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
     "jsdom": "^29.0.2",
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
+    "vite": "^6.4.2",
     "vitest": "^4.1.4"
   }
 }
